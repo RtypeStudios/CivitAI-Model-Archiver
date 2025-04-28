@@ -21,7 +21,6 @@ from tasks.write_trained_words import WriteTrainedWords
 # Constants
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 LOG_FILE_PATH = os.path.join(SCRIPT_DIR, f"log-{time.strftime('%Y%m%d%H%M%S')}.log")
-OUTPUT_DIR = "model_archives"
 MAX_PATH_LENGTH = 200
 BASE_URL = "https://civitai.com/api/v1/models"
 
@@ -38,13 +37,13 @@ class Processor:
     '''
     Class to process the model data and download files from CivitAI.
     '''
-    def __init__(self, token, max_tries, retry_delay, max_threads):
+    def __init__(self, output_dir:str, token:str, max_tries:int, retry_delay:int, max_threads:int):
         self.session = requests.Session()
+        self.output_dir = Tools.sanitize_directory_name(output_dir)
         self.token = token
         self.max_tries = max_tries
         self.retry_delay = retry_delay
         self.max_threads = max_threads
-        self.output_dir = Tools.sanitize_directory_name(OUTPUT_DIR)
         self.work_summary = {}
 
     # ------------------------------------
@@ -250,17 +249,17 @@ class Processor:
                 else:
                     # Skip files without hashes.
                     return True
-            
+
             os.makedirs(os.path.dirname(output_path), exist_ok=True)
 
             progress_bar = None
-            
+
             response = self.session.get(url, stream=True, timeout=(20, 40), headers={"Authorization": f"Bearer {self.token}"})
 
             if response.status_code == 404:
                 print(f"File not found: {url}")
                 return False
-            
+
             response.raise_for_status()
 
             total_size = int(response.headers.get('content-length', 0))
@@ -314,6 +313,7 @@ if __name__ == "__main__":
     parser.add_argument("--max_tries", type=int, default=3, help="Maximum number of retries.")
     parser.add_argument("--max_threads", type=int, default=5, help="Maximum number of concurrent threads. Too many produces API Failure.")
     parser.add_argument("--token", type=str, default=None, help="API Token for Civitai.")
+    parser.add_argument("--output_dir", type=str, default='model_archives', help="The place to output the downloads, defaults to 'model_archives'.")
     args = parser.parse_args()
 
     # Validate input arguments.
@@ -326,7 +326,7 @@ if __name__ == "__main__":
         sys.exit(1)
 
     # Build processor.
-    Processor = Processor(args.token, args.max_tries, args.retry_delay, args.max_threads)
+    Processor = Processor(args.output_dir, args.token, args.max_tries, args.retry_delay, args.max_threads)
 
     # Process provided users.
     if args.usernames is not None:

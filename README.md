@@ -90,6 +90,12 @@ You can also give the script this 5 extra Arguments
  + default=5, 
  + "Maximum number of concurrent threads.Too many produces API Failure."
 ```
+--max_threads
+```
+ + default=model_archives, 
+ + "The place to output the downloads, defaults to 'model_archives'."
+```
+
 
 #### Setup:
 You can create your API Key here
