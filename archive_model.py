@@ -24,14 +24,12 @@ LOG_FILE_PATH = os.path.join(SCRIPT_DIR, f"log-{time.strftime('%Y%m%d%H%M%S')}.l
 MAX_PATH_LENGTH = 200
 BASE_URL = "https://civitai.com/api/v1/models"
 
-logger_md = logging.getLogger('md')
-logger_md.setLevel(logging.DEBUG)
+logger = logging.getLogger('default')
+logger.setLevel(logging.DEBUG)
 file_handler_md = logging.FileHandler(LOG_FILE_PATH, encoding='utf-8')
 file_handler_md.setLevel(logging.DEBUG)
-formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-file_handler_md.setFormatter(formatter)
-logger_md.addHandler(file_handler_md)
-
+file_handler_md.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+logger.addHandler(file_handler_md)
 
 class Processor:
     '''
@@ -283,18 +281,20 @@ class Processor:
                 if self.verify_hash(output_path, sha256_hash, existing=False):
                     raise FailedHashCheckException("File Failed Hash Check")
 
-        except (requests.RequestException, FailedHashCheckException) as e:
+        
+
+        except (FailedHashCheckException) as e:
+            logger.exception(f"Hash verification failed for {url}", e)
             if retry_count < max_retries:
                 time.sleep(self.retry_delay)
                 return self.download_file_or_image(url, output_path, sha256_hash, retry_count, max_retries, hash_check_fail=True)
-        except (requests.RequestException, Exception) as e:
+        except (requests.RequestException, requests.HTTPError, requests.Timeout, requests.ConnectTimeout, requests.ReadTimeout) as e:
+            logger.exception(f"exception {url}", e)
             if retry_count < max_retries:
                 time.sleep(self.retry_delay)
                 return self.download_file_or_image(url, output_path, sha256_hash, retry_count + 1, max_retries)
-        except (requests.RequestException, TimeoutError, ConnectionResetError) as e:
-            if retry_count < max_retries:
-                time.sleep(self.retry_delay)
-                return self.download_file_or_image(url, output_path, sha256_hash, retry_count + 1, max_retries)
+        except (Exception) as e:
+            logger.exception(f"general exception occured", e)
         finally:
             if progress_bar:
                 progress_bar.close()
@@ -324,6 +324,8 @@ if __name__ == "__main__":
     if args.usernames is None and args.models is None:
         print("Please provide at least one username or model id.")
         sys.exit(1)
+
+    logger.info(f"Starting")
 
     # Build processor.
     Processor = Processor(args.output_dir, args.token, args.max_tries, args.retry_delay, args.max_threads)
