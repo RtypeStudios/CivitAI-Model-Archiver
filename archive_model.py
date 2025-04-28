@@ -262,6 +262,8 @@ class Processor:
 
             total_size = int(response.headers.get('content-length', 0))
 
+            title = "Downloading"
+
             if retry_count > 0:
                 title = f"Downloading Retry: {retry_count}/{max_retries}"
                 if hash_check_fail is True:
