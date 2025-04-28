@@ -1,0 +1,105 @@
+
+
+
+# Civit-Model-Archiver
+Firstly, this started as a fork of [CivitAI-Model-grabber](https://github.com/Confuzu/CivitAI-Model-grabber) to add the ability to export a single mode. but then my changes got a bit out of hand. Big thank you to [Confuzu](https://github.com/Confuzu/CivitAI-Model-grabber/commits?author=Confuzu) for the original code, thank you!
+
+The script Supports different download types: Lora, Checkpoints, Embeddings for a given model or all models for a bunch of usernames or model ids or both.
+
+It's designed to download only the files that are not already present in the specified username's folder.
+If the user uploads new models, running the script again will download only the newly uploaded files.
+
+This runs a SHA256 on all downloaded models to ensure the file is complete and matches the hash proivded by CivitAI
+
+The code is a bit rough, it has been a rushed a bit to meet the deadline for the recent content removal due to TOS changes.
+
+
+**File Structure**  <br /> 
+The downloaded files will be organized in the following structure:
+```
+model_downloads/
+├── User Name/
+│   └── [Model Name] ([Model Type])/
+│       ├── [Model Id].json 
+│       ├── description.html 
+│       ├── [Model Version] ([Base Model])/
+│       │       ├── file1.safetensors
+│       │       ├── image1.jpeg
+│       │       ├── details.txt
+│       │       ├── trained_works.txt
+│       │       └── description.html
+│       └── [Model Version] ([Base Model])/
+│               ├── file3.safetensors
+│               ├── image2.jpeg
+│               ├── details.txt
+│               ├── triggerWords.txt
+│               └── description.html
+└── User Name/
+    └── ...
+```
+
+# How to  use
+```
+install Python3
+```
+```
+pip install -r requirements.txt
+```
+```
+python archive_model.py --usernames UserName1 UserName2 --models 1 2 3 4
+```
+
+#### Required Arguments:
+```
+--models 1 2 3 4 5 6
+```
++ "A list of model ids taken from the URL of the model view page on CivitAI"
+```
+--usernames username1 username2
+```
++ "A list of usernames from CivitAI"
+```
+--token 
+```
+default=None
++ "It will only Download the Public availabe Models"
++ "Provide a Token and it can also Download those Models behind the CivitAI Login."
++ If you forgot to Provide a Token the Script asks for your token.
+
+
+#### Optional Arguments:
+```
+You can also give the script this 5 extra Arguments
+```
+--retry_delay 
+```
++ default=10,
++ "Retry delay in seconds."
+```
+--max_tries
+```
++ default=3,
++ "Maximum number of retries."
+```
+--max_threads
+```
+ + default=5, 
+ + "Maximum number of concurrent threads.Too many produces API Failure."
+```
+
+#### Optional Arguments:
+
+
+
+
+You can create your API Key here
+ [Account Settings](https://civitai.com/user/account).
+ Scoll down until  the end and you  find this Box
+
+![API](https://github.com/RtypeStudios/CivitAI-Model-Archiver/raw/refs/heads/main/api_login_example.png)
+
+# Updates & Bugfixes
+
+
+
+
