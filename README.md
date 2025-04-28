@@ -1,6 +1,3 @@
-
-
-
 # Civit-Model-Archiver
 Firstly, this started as a fork of [CivitAI-Model-grabber](https://github.com/Confuzu/CivitAI-Model-grabber) to add the ability to export a single mode. but then my changes got a bit out of hand. Big thank you to [Confuzu](https://github.com/Confuzu/CivitAI-Model-grabber/commits?author=Confuzu) for the original code, thank you!
 
@@ -38,7 +35,7 @@ model_downloads/
     └── ...
 ```
 
-# How to  use
+# How to use
 ```
 install Python3
 ```
@@ -48,6 +45,13 @@ pip install -r requirements.txt
 ```
 python archive_model.py --usernames UserName1 UserName2 --models 1 2 3 4
 ```
+#### or virtual env:
+```
+python3 -m venv vvv
+source vvv/bin/activate
+pip install -r requirements.txt
+```
+
 
 #### Required Arguments:
 ```
@@ -87,11 +91,7 @@ You can also give the script this 5 extra Arguments
  + "Maximum number of concurrent threads.Too many produces API Failure."
 ```
 
-#### Optional Arguments:
-
-
-
-
+#### Setup:
 You can create your API Key here
  [Account Settings](https://civitai.com/user/account).
  Scoll down until  the end and you  find this Box
@@ -99,7 +99,6 @@ You can create your API Key here
 ![API](https://github.com/RtypeStudios/CivitAI-Model-Archiver/raw/refs/heads/main/api_login_example.png)
 
 # Updates & Bugfixes
-
-
+coming soon ...
 
 
