@@ -259,52 +259,87 @@ class Processor:
             progress_bar = None
 
             title = "Downloading"
+            color = 'YELLOW'
+            mode = 'wb'
 
             if retry_count > 0:
                 title = f"Downloading Retry: {retry_count}/{max_retries}"
 
-            if os.path.exists(output_path_tmp):
+            headers = {"Authorization": f"Bearer {self.token}"}
 
+            if os.path.exists(output_path_tmp):
                 # Resume existing download.
                 resume_byte_pos = os.path.getsize(output_path_tmp)
+                headers['Range'] = f'bytes={resume_byte_pos}-'
+                color = 'MAGENTA'
+                mode = 'ab'
 
-                response = self.session.get(url, stream=True, timeout=(20, 40), headers={"Authorization": f"Bearer {self.token}", 'Range': f'bytes={resume_byte_pos}-'})
 
-                if response.status_code == 404:
-                    print(f"File not found: {url}")
-                    return False
+            response = self.session.get(url, stream=True, timeout=(20, 40), headers={"Authorization": f"Bearer {self.token}"})
 
-                response.raise_for_status()
+            if response.status_code == 404:
+                print(f"File not found: {url}")
+                return False
 
-                total_size = int(response.headers.get('content-length', 0))
+            response.raise_for_status()
 
-                progress_bar = tqdm(desc=title, total=total_size-resume_byte_pos, unit='B', unit_scale=True, leave=False, colour='MAGENTA')
+            total_size = int(response.headers.get('content-length', 0))
 
-                with open(output_path_tmp, "ab") as file:
-                    for chunk in response.iter_content(chunk_size=8192):
-                        if chunk:
-                            progress_bar.update(len(chunk))
-                            file.write(chunk)
+            progress_bar = tqdm(desc=title, total=total_size, unit='B', unit_scale=True, leave=False, colour=color)
 
-            else:
-                # Start Download from scratch.
-                response = self.session.get(url, stream=True, timeout=(20, 40), headers={"Authorization": f"Bearer {self.token}"})
+            with open(output_path_tmp, mode) as file:
+                for chunk in response.iter_content(chunk_size=8192):
+                    if chunk:
+                        progress_bar.update(len(chunk))
+                        file.write(chunk)
 
-                if response.status_code == 404:
-                    print(f"File not found: {url}")
-                    return False
 
-                response.raise_for_status()
 
-                total_size = int(response.headers.get('content-length', 0))
 
-                progress_bar = tqdm(desc=title, total=total_size, unit='B', unit_scale=True, leave=False, colour='YELLOW')
 
-                with open(output_path_tmp, "wb") as file:
-                    for chunk in response.iter_content(chunk_size=8192):
-                        if chunk:
-                            progress_bar.update(len(chunk))
-                            file.write(chunk)
+
+            # if os.path.exists(output_path_tmp):
+
+            #     # Resume existing download.
+            #     resume_byte_pos = os.path.getsize(output_path_tmp)
+
+            #     response = self.session.get(url, stream=True, timeout=(20, 40), headers={"Authorization": f"Bearer {self.token}", 'Range': f'bytes={resume_byte_pos}-'})
+
+            #     if response.status_code == 404:
+            #         print(f"File not found: {url}")
+            #         return False
+
+            #     response.raise_for_status()
+
+            #     total_size = int(response.headers.get('content-length', 0))
+
+            #     progress_bar = tqdm(desc=title, total=total_size-resume_byte_pos, unit='B', unit_scale=True, leave=False, colour='MAGENTA')
+
+            #     with open(output_path_tmp, "ab") as file:
+            #         for chunk in response.iter_content(chunk_size=8192):
+            #             if chunk:
+            #                 progress_bar.update(len(chunk))
+            #                 file.write(chunk)
+
+            # else:
+            #     # Start Download from scratch.
+            #     response = self.session.get(url, stream=True, timeout=(20, 40), headers={"Authorization": f"Bearer {self.token}"})
+
+            #     if response.status_code == 404:
+            #         print(f"File not found: {url}")
+            #         return False
+
+            #     response.raise_for_status()
+
+            #     total_size = int(response.headers.get('content-length', 0))
+
+            #     progress_bar = tqdm(desc=title, total=total_size, unit='B', unit_scale=True, leave=False, colour='YELLOW')
+
+            #     with open(output_path_tmp, "wb") as file:
+            #         for chunk in response.iter_content(chunk_size=8192):
+            #             if chunk:
+            #                 progress_bar.update(len(chunk))
+            #                 file.write(chunk)
 
 
             progress_bar.close()
