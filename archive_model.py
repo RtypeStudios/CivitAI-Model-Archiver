@@ -240,57 +240,88 @@ class Processor:
 
             # Check if the file already exists
             if os.path.exists(output_path):
-                if sha256_hash is not None and sha256_hash != '':
-                    # Check if the file Hash matches, if not, continue to download.
-                    if self.verify_hash(output_path, sha256_hash, existing=True):
-                        return True
-                else:
-                    # Skip files without hashes.
-                    return True
+                logger.info(f"Skipping {url} already exists")
+                return True
+                # if sha256_hash is not None and sha256_hash != '':
+                #     # Check if the file Hash matches, if not, continue to download.
+                #     if self.verify_hash(output_path, sha256_hash, existing=True):
+                #         return True
+                # else:
+                #     # Skip files without hashes.
+                #     return True
 
-            os.makedirs(os.path.dirname(output_path), exist_ok=True)
+            # New Download
+
+            output_path_tmp = output_path + '.tmp'
+
+            os.makedirs(os.path.dirname(output_path_tmp), exist_ok=True)
 
             progress_bar = None
-
-            response = self.session.get(url, stream=True, timeout=(20, 40), headers={"Authorization": f"Bearer {self.token}"})
-
-            if response.status_code == 404:
-                print(f"File not found: {url}")
-                return False
-
-            response.raise_for_status()
-
-            total_size = int(response.headers.get('content-length', 0))
 
             title = "Downloading"
 
             if retry_count > 0:
                 title = f"Downloading Retry: {retry_count}/{max_retries}"
-                if hash_check_fail is True:
-                    title = title + " (Hash Check Failed)"
 
-            progress_bar = tqdm(desc=title, total=total_size, unit='B', unit_scale=True, leave=False, colour='YELLOW')
+            if os.path.exists(output_path_tmp):
 
-            with open(output_path, "wb") as file:
-                for chunk in response.iter_content(chunk_size=8192):
-                    if chunk:
-                        progress_bar.update(len(chunk))
-                        file.write(chunk)
+                # Resume existing download.
+                resume_byte_pos = os.path.getsize(output_path_tmp)
+
+                response = self.session.get(url, stream=True, timeout=(20, 40), headers={"Authorization": f"Bearer {self.token}", 'Range': f'bytes={resume_byte_pos}-'})
+
+                if response.status_code == 404:
+                    print(f"File not found: {url}")
+                    return False
+
+                response.raise_for_status()
+
+                total_size = int(response.headers.get('content-length', 0))
+
+                progress_bar = tqdm(desc=title, total=total_size-resume_byte_pos, unit='B', unit_scale=True, leave=False, colour='MAGENTA')
+
+                with open(output_path_tmp, "ab") as file:
+                    for chunk in response.iter_content(chunk_size=8192):
+                        if chunk:
+                            progress_bar.update(len(chunk))
+                            file.write(chunk)
+
+            else:
+                # Start Download from scratch.
+                response = self.session.get(url, stream=True, timeout=(20, 40), headers={"Authorization": f"Bearer {self.token}"})
+
+                if response.status_code == 404:
+                    print(f"File not found: {url}")
+                    return False
+
+                response.raise_for_status()
+
+                total_size = int(response.headers.get('content-length', 0))
+
+                progress_bar = tqdm(desc=title, total=total_size, unit='B', unit_scale=True, leave=False, colour='YELLOW')
+
+                with open(output_path_tmp, "wb") as file:
+                    for chunk in response.iter_content(chunk_size=8192):
+                        if chunk:
+                            progress_bar.update(len(chunk))
+                            file.write(chunk)
+
 
             progress_bar.close()
+
+            os.rename(output_path_tmp, output_path)
 
             if sha256_hash is not None and sha256_hash != '':
                 if self.verify_hash(output_path, sha256_hash, existing=False):
                     raise FailedHashCheckException("File Failed Hash Check")
 
-        
 
         except (FailedHashCheckException) as e:
             logger.exception(f"Hash verification failed for {url}", e)
             if retry_count < max_retries:
                 time.sleep(self.retry_delay)
                 return self.download_file_or_image(url, output_path, sha256_hash, retry_count, max_retries, hash_check_fail=True)
-        except (requests.RequestException, requests.HTTPError, requests.Timeout, requests.ConnectTimeout, requests.ReadTimeout) as e:
+        except (requests.RequestException, requests.HTTPError, requests.Timeout, requests.ConnectTimeout, requests.ReadTimeout, requests.exceptions.ChunkedEncodingError) as e:
             logger.exception(f"exception {url}", e)
             if retry_count < max_retries:
                 time.sleep(self.retry_delay)
