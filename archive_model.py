@@ -301,7 +301,7 @@ class Processor:
 
         except (FailedHashCheckException) as e:
             logger.exception(f"Hash verification failed for {url} renaming file and redownloading", e)
-            os.rename(output_path, output_path + '.failedhash')
+            os.rename(output_path, output_path + '.failed_hash')
             if retry_count < max_retries:
                 time.sleep(self.retry_delay)
                 return self.download_file_or_image(url, output_path, sha256_hash, retry_count, max_retries)
