@@ -75,25 +75,35 @@ default=None
 ```
 You can also give the script this 5 extra Arguments
 ```
+
 --retry_delay 
 ```
 + default=10,
 + "Retry delay in seconds."
 ```
+
 --max_tries
 ```
 + default=3,
 + "Maximum number of retries."
 ```
+
 --max_threads
 ```
  + default=5, 
  + "Maximum number of concurrent threads.Too many produces API Failure."
 ```
+
 --max_threads
 ```
  + default=model_archives, 
  + "The place to output the downloads, defaults to 'model_archives'."
+```
+
+--skip_existing_verification
+```
+ + default=false, 
+ + "Skip SHA256 verification of existing downloads."
 ```
 
 

@@ -36,13 +36,14 @@ class Processor:
     '''
     Class to process the model data and download files from CivitAI.
     '''
-    def __init__(self, output_dir:str, token:str, max_tries:int, retry_delay:int, max_threads:int):
+    def __init__(self, output_dir:str, token:str, max_tries:int, retry_delay:int, max_threads:int, skip_existing_verification:bool):
         self.session = requests.Session()
         self.output_dir = Tools.sanitize_directory_name(output_dir)
         self.token = token
         self.max_tries = max_tries
         self.retry_delay = retry_delay
         self.max_threads = max_threads
+        self.skip_existing_verification = skip_existing_verification
         self.work_summary = {}
 
     # ------------------------------------
@@ -242,14 +243,17 @@ class Processor:
             # Check if the file already exists
             if os.path.exists(output_path):
                 # return True
-                if sha256_hash is not None and sha256_hash != '':
-                    # Check if the file Hash matches, if not, continue to download.
-                    if self.verify_hash(output_path, sha256_hash, existing=True):
-                        return True
+                if self.skip_existing_verification is False:
+                    if sha256_hash is not None and sha256_hash != '':
+                        # Check if the file Hash matches, if not, continue to download.
+                        if self.verify_hash(output_path, sha256_hash, existing=True):
+                            return True
+                        else:
+                            raise FailedHashCheckException("File failed hash check on existing completed file")
                     else:
-                        raise FailedHashCheckException("File failed hash check on existing completed file")
+                        # Skip files without hashes.
+                        return True
                 else:
-                    # Skip files without hashes.
                     return True
 
             output_path_tmp = output_path + '.tmp'
@@ -298,8 +302,6 @@ class Processor:
                 if self.verify_hash(output_path, sha256_hash, existing=False) is False:
                     raise FailedHashCheckException("File failed hash check after download")
                 
-
-
         except (FailedHashCheckException) as e:
             if retry_count < max_retries:
                 os.rename(output_path, output_path + f'.failed_hash{retry_count}')
@@ -334,6 +336,7 @@ if __name__ == "__main__":
     parser.add_argument("--max_threads", type=int, default=5, help="Maximum number of concurrent threads. Too many produces API Failure.")
     parser.add_argument("--token", type=str, default=None, help="API Token for Civitai.")
     parser.add_argument("--output_dir", type=str, default='model_archives', help="The place to output the downloads, defaults to 'model_archives'.")
+    parser.add_argument("--skip_existing_verification", action='store_true', default=False, help="Verifiy already downloaded files that have a hash value.")
     args = parser.parse_args()
 
     # Validate input arguments.
@@ -348,7 +351,7 @@ if __name__ == "__main__":
     logger.info(f"Starting")
 
     # Build processor.
-    Processor = Processor(args.output_dir, args.token, args.max_tries, args.retry_delay, args.max_threads)
+    Processor = Processor(args.output_dir, args.token, args.max_tries, args.retry_delay, args.max_threads, args.skip_existing_verification)
 
     # Process provided users.
     if args.usernames is not None:
