@@ -252,11 +252,9 @@ class Processor:
                     return True
 
             output_path_tmp = output_path + '.tmp'
-
             os.makedirs(os.path.dirname(output_path_tmp), exist_ok=True)
 
             progress_bar = None
-
             title = "Downloading"
             color = 'YELLOW'
             mode = 'wb'
