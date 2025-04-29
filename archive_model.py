@@ -307,14 +307,12 @@ class Processor:
                 return self.download_file_or_image(url, output_path, sha256_hash, retry_count, max_retries)
             else:
                 logger.exception(f"Hash verification failed for {url} renaming file and redownloading", e)
-
-        except (requests.RequestException, requests.HTTPError, requests.Timeout, requests.ConnectTimeout, requests.ReadTimeout, requests.exceptions.ChunkedEncodingError, urllib3.exceptions.ProtocolError) as e:
+        except (requests.RequestException, requests.HTTPError, requests.Timeout, requests.ConnectTimeout, requests.ReadTimeout, requests.exceptions.ChunkedEncodingError, urllib3.exceptions.ProtocolError, urllib3.exceptions.IncompleteRead) as e:
             if retry_count < max_retries:
                 time.sleep(self.retry_delay)
                 return self.download_file_or_image(url, output_path, sha256_hash, retry_count + 1, max_retries)
             else:
                 logger.exception(f"exception {url}", e)
-
         except (Exception) as e:
             logger.exception(f"general exception occured", e)
         finally:
