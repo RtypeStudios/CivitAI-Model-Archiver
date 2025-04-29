@@ -8,6 +8,7 @@ import argparse
 import sys
 from tqdm import tqdm
 import requests
+import urllib3
 
 from common.tools import Tools
 from models.model import Model
@@ -300,16 +301,20 @@ class Processor:
 
 
         except (FailedHashCheckException) as e:
-            logger.exception(f"Hash verification failed for {url} renaming file and redownloading", e)
-            os.rename(output_path, output_path + '.failed_hash')
             if retry_count < max_retries:
+                os.rename(output_path, output_path + f'.failed_hash{retry_count}')
                 time.sleep(self.retry_delay)
                 return self.download_file_or_image(url, output_path, sha256_hash, retry_count, max_retries)
-        except (requests.RequestException, requests.HTTPError, requests.Timeout, requests.ConnectTimeout, requests.ReadTimeout, requests.exceptions.ChunkedEncodingError) as e:
-            logger.exception(f"exception {url}", e)
+            else:
+                logger.exception(f"Hash verification failed for {url} renaming file and redownloading", e)
+
+        except (requests.RequestException, requests.HTTPError, requests.Timeout, requests.ConnectTimeout, requests.ReadTimeout, requests.exceptions.ChunkedEncodingError, urllib3.exceptions.ProtocolError) as e:
             if retry_count < max_retries:
                 time.sleep(self.retry_delay)
                 return self.download_file_or_image(url, output_path, sha256_hash, retry_count + 1, max_retries)
+            else:
+                logger.exception(f"exception {url}", e)
+
         except (Exception) as e:
             logger.exception(f"general exception occured", e)
         finally:
