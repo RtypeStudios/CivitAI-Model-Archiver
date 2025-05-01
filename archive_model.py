@@ -81,8 +81,6 @@ class Processor:
         # Create output directory for model archives
         model_data = Tools.get_json_with_retry(self.session, f"{BASE_URL}/{model_id}?{urllib.parse.urlencode({ "nsfw": "true" })}", self.token, self.retry_delay)
 
-        #print(f"Model data: {json.dumps(model_data, indent=4)}")
-
         # Add model data to the summary.
         self.build_tasks(model_data['creator']['username'], model_data)
 
@@ -203,7 +201,8 @@ class Processor:
 
                     # Check if the furture raised an exception
                     if future.exception() is not None:
-                        print(f"Error: {future.exception()}")
+                        e = future.exception()
+                        logging.error("%s error occurred: %s", type(e), e, stack_info=True, exc_info=True)
 
 
     def verify_hash(self, file_path, expected_hash):
@@ -265,6 +264,7 @@ class Processor:
 
             if retry_count > 0:
                 title = f"Downloading Retry: {retry_count}/{max_retries}"
+                logger.warning("ownloading Retry for: %s %s %s", url,retry_count, max_retries)
 
             headers = {"Authorization": f"Bearer {self.token}"}
 
@@ -279,10 +279,12 @@ class Processor:
 
             if response.status_code == 404:
                 print(f"File not found: {url}")
+                logger.warning("File not found: %s", url)
                 return False
 
             if response.status_code == 416:
                 print(f"could not resume download, resume was: {headers['Range']} {url}")
+                logger.warning("could not resume download: %s", url)
                 return False
 
             response.raise_for_status()
@@ -323,10 +325,6 @@ class Processor:
             else:
                 logger.exception("exception %s", url, exc_info=e)
                 return False
-
-        except (Exception) as e:
-            logger.exception("unhandled exception occured", e)
-            return False
 
         finally:
             if progress_bar:
