@@ -206,19 +206,14 @@ class Processor:
                         print(f"Error: {future.exception()}")
 
 
-    def verify_hash(self, file_path, expected_hash, existing):
+    def verify_hash(self, file_path, expected_hash):
         '''
         Verify the SHA256 hash of a file.
         '''
         sha256 = hashlib.sha256()
         filesize = os.path.getsize(file_path)
 
-        title = "Verifying Download"
-
-        if existing:
-            title = 'Verifying existing file'
-
-        progress_bar = tqdm(desc=title, total=filesize, unit='B', unit_scale=True, leave=False, colour='blue')
+        progress_bar = tqdm(desc="Verifying Download", total=filesize, unit='B', unit_scale=True, leave=False, colour='blue')
 
         with open(file_path, "rb") as f:
             for chunk in iter(lambda: f.read(4096), b""):
@@ -242,18 +237,22 @@ class Processor:
 
             # Check if the file already exists
             if os.path.exists(output_path):
-                # return True
+                # Are we verifying a existing files?
                 if self.skip_existing_verification is False:
+                    # Do we have a hash to check against?
                     if sha256_hash is not None and sha256_hash != '':
                         # Check if the file Hash matches, if not, continue to download.
-                        if self.verify_hash(output_path, sha256_hash, existing=True):
+                        if self.verify_hash(output_path, sha256_hash):
+                            # If it does retorn
                             return True
                         else:
+                            # Throw an error if the existing haah is bad and handle it in the exception block.
                             raise FailedHashCheckException("File failed hash check on existing completed file")
                     else:
                         # Skip files without hashes.
                         return True
                 else:
+                    # Skip verification.
                     return True
 
             output_path_tmp = output_path + '.tmp'
@@ -270,7 +269,7 @@ class Processor:
             headers = {"Authorization": f"Bearer {self.token}"}
 
             if os.path.exists(output_path_tmp):
-                # Resume existing download.
+                # Resuming existing download.
                 headers['Range'] = f'bytes={os.path.getsize(output_path_tmp)}-'
                 color = 'MAGENTA'
                 mode = 'ab'
@@ -280,6 +279,10 @@ class Processor:
 
             if response.status_code == 404:
                 print(f"File not found: {url}")
+                return False
+
+            if response.status_code == 416:
+                print(f"could not resume download, resume was: {headers['Range']} {url}")
                 return False
 
             response.raise_for_status()
@@ -299,29 +302,37 @@ class Processor:
             os.rename(output_path_tmp, output_path)
 
             if sha256_hash is not None and sha256_hash != '':
-                if self.verify_hash(output_path, sha256_hash, existing=False) is False:
+                if self.verify_hash(output_path, sha256_hash) is False:
                     raise FailedHashCheckException("File failed hash check after download")
-                
+
+            return True
+
         except (FailedHashCheckException) as e:
             if retry_count < max_retries:
                 os.rename(output_path, output_path + f'.failed_hash{retry_count}')
                 time.sleep(self.retry_delay)
                 return self.download_file_or_image(url, output_path, sha256_hash, retry_count, max_retries)
             else:
-                logger.exception(f"Hash verification failed for {url} renaming file and redownloading", e)
+                logger.exception("Hash verification failed for %s renaming file and re-downloading", url, exc_info=e)
+                return False
+
         except (requests.RequestException, requests.HTTPError, requests.Timeout, requests.ConnectTimeout, requests.ReadTimeout, requests.exceptions.ChunkedEncodingError, urllib3.exceptions.ProtocolError, urllib3.exceptions.IncompleteRead) as e:
             if retry_count < max_retries:
                 time.sleep(self.retry_delay)
                 return self.download_file_or_image(url, output_path, sha256_hash, retry_count + 1, max_retries)
             else:
-                logger.exception(f"exception {url}", e)
+                logger.exception("exception %s", url, exc_info=e)
+                return False
+
         except (Exception) as e:
-            logger.exception(f"general exception occured", e)
+            logger.exception("unhandled exception occured", e)
+            return False
+
         finally:
             if progress_bar:
                 progress_bar.close()
 
-        return True
+
 
 
 
@@ -348,7 +359,7 @@ if __name__ == "__main__":
         print("Please provide at least one username or model id.")
         sys.exit(1)
 
-    logger.info(f"Starting")
+    logger.info("Starting")
 
     # Build processor.
     Processor = Processor(args.output_dir, args.token, args.max_tries, args.retry_delay, args.max_threads, args.skip_existing_verification)

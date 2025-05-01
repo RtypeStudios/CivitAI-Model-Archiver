@@ -35,21 +35,38 @@ model_downloads/
     └── ...
 ```
 
-# How to use
+# Install
+
+### local deps
 ```
 install Python3
 ```
 ```
 pip install -r requirements.txt
 ```
-```
-python archive_model.py --usernames UserName1 UserName2 --models 1 2 3 4
-```
+
 #### or virtual env:
 ```
 python3 -m venv vvv
 source vvv/bin/activate
 pip install -r requirements.txt
+```
+
+# How to use
+
+Download models:
+```
+python archive_model.py --models 1 2 3 4
+```
+
+Download all models for user:
+```
+python archive_model.py --usernames UserName1 UserName2
+```
+
+Download both
+```
+python archive_model.py --usernames UserName1 UserName2 --models 1 2 3 4
 ```
 
 
