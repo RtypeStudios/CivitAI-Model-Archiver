@@ -12,14 +12,14 @@ class DownloadFile(Task):
     '''
     Download a file from a given URL and save it to the specified output path.
     '''
-    def __init__(self, token:str, file_name:str, output_path:str, url:str, sha256_hash='', file_size=0, rety_delay=10, skip_existing_verification=False):
+    def __init__(self, token:str, file_name:str, output_path:str, url:str, sha256_hash='', file_size=0, retry_delay=10, skip_existing_verification=False):
         super().__init__(f'Download File: \"{file_name}\" to: \"{output_path}\"', output_path, file_name)
 
         self.token = token
         self.url = url
         self.sha256_hash = sha256_hash
         self.file_size = file_size
-        self.rety_delay = rety_delay
+        self.rety_delay = retry_delay
         self.skip_existing_verification = skip_existing_verification
         self.output_path_and_filename = os.path.join(self.output_path, self.file_name)
 
