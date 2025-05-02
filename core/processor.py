@@ -102,22 +102,22 @@ class Processor:
             current_version.tasks.append(WriteTrainedWords(version_output_path, version.get('trainedWords', [])))
 
             for model_file in version['files']:
-                current_version.tasks.append(DownloadFile(self.token, 
-                                                          model_file['name'], 
-                                                          version_output_path, 
-                                                          model_file['downloadUrl'], 
-                                                          model_file['hashes']['SHA256'], 
-                                                          model_file['sizeKB'], 
-                                                          rety_delay=self.retry_delay, 
+                current_version.tasks.append(DownloadFile(self.token,
+                                                          model_file['name'],
+                                                          version_output_path,
+                                                          model_file['downloadUrl'],
+                                                          model_file['hashes']['SHA256'],
+                                                          model_file['sizeKB'],
+                                                          retry_delay=self.retry_delay,
                                                           skip_existing_verification=self.skip_existing_verification))
 
             for idx, model_image in enumerate(version['images']):
                 file_extension = Tools.get_file_extension_regex(model_image['url'])
-                current_version.tasks.append(DownloadFile(self.token, 
-                                                          f'{idx}.{file_extension}', 
-                                                          version_output_path, 
-                                                          model_image['url'], 
-                                                          rety_delay=self.retry_delay, 
+                current_version.tasks.append(DownloadFile(self.token,
+                                                          f'{idx}.{file_extension}',
+                                                          version_output_path,
+                                                          model_image['url'],
+                                                          retry_delay=self.retry_delay,
                                                           skip_existing_verification=self.skip_existing_verification))
 
             current_model.versions.append(current_version)

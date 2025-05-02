@@ -19,7 +19,7 @@ class DownloadFile(Task):
         self.url = url
         self.sha256_hash = sha256_hash
         self.file_size = file_size
-        self.rety_delay = retry_delay
+        self.retry_delay = retry_delay
         self.skip_existing_verification = skip_existing_verification
         self.output_path_and_filename = os.path.join(self.output_path, self.file_name)
 
