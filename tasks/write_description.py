@@ -1,8 +1,11 @@
 from lxml import etree, html
 
-from .task import Task
+from tasks.task import Task
 
 class WriteDescription(Task):
+    '''
+    Write a description to an HTML file.
+    '''
     def __init__(self, output_path:str, description:str):
         file_name = 'description.html'
         super().__init__(f'Write Description: \"{file_name}\" to: \"{output_path}\"', output_path, file_name)
