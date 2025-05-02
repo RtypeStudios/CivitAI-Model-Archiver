@@ -35,21 +35,38 @@ model_downloads/
     └── ...
 ```
 
-# How to use
+# Install
+
+### local deps
 ```
 install Python3
 ```
 ```
 pip install -r requirements.txt
 ```
-```
-python archive_model.py --usernames UserName1 UserName2 --models 1 2 3 4
-```
+
 #### or virtual env:
 ```
 python3 -m venv vvv
 source vvv/bin/activate
 pip install -r requirements.txt
+```
+
+# How to use
+
+Download models:
+```
+python archive_model.py --models 1 2 3 4
+```
+
+Download all models for user:
+```
+python archive_model.py --usernames UserName1 UserName2
+```
+
+Download both
+```
+python archive_model.py --usernames UserName1 UserName2 --models 1 2 3 4
 ```
 
 
@@ -75,25 +92,35 @@ default=None
 ```
 You can also give the script this 5 extra Arguments
 ```
+
 --retry_delay 
 ```
 + default=10,
 + "Retry delay in seconds."
 ```
+
 --max_tries
 ```
 + default=3,
 + "Maximum number of retries."
 ```
+
 --max_threads
 ```
  + default=5, 
  + "Maximum number of concurrent threads.Too many produces API Failure."
 ```
+
 --max_threads
 ```
  + default=model_archives, 
  + "The place to output the downloads, defaults to 'model_archives'."
+```
+
+--skip_existing_verification
+```
+ + default=false, 
+ + "Skip SHA256 verification of existing downloads."
 ```
 
 
