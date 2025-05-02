@@ -41,24 +41,27 @@ class DownloadFile(Task):
 
             # Check if the file already exists
             if os.path.exists(output_path):
+
+                # Are we verifying a existing files?
+                if self.skip_existing_verification is not True:
+                    self.logger.debug('Starting verification of existing download: %s', self.output_path_and_filename)
+
+                    if sha256_hash is not None and sha256_hash != '':
+                        # Check if the file Hash matches, if not, continue to download.
+                        if self.verify_hash(output_path, sha256_hash):
+                            self.logger.debug('Validated successfully: %s', self.output_path_and_filename)
+                            return True
+                        else:
+                            # Throw an error if the existing haah is bad and handle it in the exception block.
+                            raise FailedHashCheckException("File failed hash check on existing completed file")
+                    else:
+                        self.logger.debug('No hash found for %s', self.output_path_and_filename)
+                        return True
+                else:
+                    self.logger.debug('Skipping verification of existing download: %s', self.output_path_and_filename)
+
                 return True
 
-            # Are we verifying a existing files?
-            if self.skip_existing_verification is False:
-                # Do we have a hash to check against?
-                if sha256_hash is not None and sha256_hash != '':
-                    # Check if the file Hash matches, if not, continue to download.
-                    if self.verify_hash(output_path, sha256_hash):
-                        # If it does retorn
-                        return True
-                    else:
-                        # Throw an error if the existing haah is bad and handle it in the exception block.
-                        raise FailedHashCheckException("File failed hash check on existing completed file")
-                else:
-                    # Skip files without hashes.
-                    return True
-            else:
-                self.logger.debug('Skipping verification of existing download: %s', self.output_path_and_filename)
 
             output_path_tmp = output_path + '.tmp'
             os.makedirs(os.path.dirname(output_path_tmp), exist_ok=True)
@@ -151,7 +154,7 @@ class DownloadFile(Task):
                 sha256.update(chunk)
 
         progress_bar.close()
-        
+
         result_hash = sha256.hexdigest().upper()
         expected_hash = expected_hash.upper()
 
