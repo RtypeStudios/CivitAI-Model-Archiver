@@ -19,8 +19,7 @@ class Processor:
     '''
     Class to process the model data and download files from CivitAI.
     '''
-    def __init__(self, output_dir:str, token:str, max_tries:int, retry_delay:int, max_threads:int, skip_existing_verification:bool):
-
+    def __init__(self, output_dir:str, token:str, max_tries:int, retry_delay:int, max_threads:int, skip_existing_verification:bool, only_base_models:list[str]):
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging.DEBUG)
 
@@ -31,12 +30,17 @@ class Processor:
         self.retry_delay = retry_delay
         self.max_threads = max_threads
         self.skip_existing_verification = skip_existing_verification
-        self.work_summary = {}
+        self.only_base_models = [s.upper() for s in only_base_models]
 
+        self.work_summary = {}
         self.base_url = "https://civitai.com/api/v1/models"
         self.max_path_length = 200
 
         self.logger.info("Processor initialized with output_dir: %s, max_tries: %d, retry_delay: %d, max_threads: %d, Skip existing verification: %s", self.output_dir, self.max_tries, self.retry_delay, self.max_threads, self.skip_existing_verification)
+
+        if self.only_base_models is not None:
+            self.logger.info("Only fetching models versions based on %s.", "".join(self.only_base_models))
+
 
     # ------------------------------------
     # Main Worker.
@@ -101,15 +105,19 @@ class Processor:
 
             current_version.tasks.append(WriteTrainedWords(version_output_path, version.get('trainedWords', [])))
 
+            if self.only_base_models is not None and version_base_model.upper() not in self.only_base_models:
+                self.logger.warning("Skipping condition %s, not in wanted model list", model_name)
+                continue
+
             for model_file in version['files']:
                 current_version.tasks.append(DownloadFile(self.token,
-                                                          model_file['name'],
-                                                          version_output_path,
-                                                          model_file['downloadUrl'],
-                                                          model_file['hashes']['SHA256'],
-                                                          model_file['sizeKB'],
-                                                          retry_delay=self.retry_delay,
-                                                          skip_existing_verification=self.skip_existing_verification))
+                                                        model_file['name'],
+                                                        version_output_path,
+                                                        model_file['downloadUrl'],
+                                                        model_file['hashes']['SHA256'],
+                                                        model_file['sizeKB'],
+                                                        retry_delay=self.retry_delay,
+                                                        skip_existing_verification=self.skip_existing_verification))
 
             for idx, model_image in enumerate(version['images']):
                 file_extension = Tools.get_file_extension_regex(model_image['url'])
@@ -139,8 +147,8 @@ class Processor:
         '''
         Write the summary information for the user.
         '''
-
-        summary = 'Below are a list of the requested tasks (Note: anything already downloaded will be skipped).'
+        summary = os.linesep
+        summary += 'Below are a list of the requested tasks (Note: anything already downloaded will be skipped).'
         summary += os.linesep
 
         for username, models in self.work_summary.items():
@@ -153,15 +161,14 @@ class Processor:
                     summary += f"\t\t\t{t.name}" + os.linesep
                 summary += os.linesep
                 for v in m.versions:
-                    summary += f"\tVersion: {v.id} ({v.name}) based on {v.base_model}" + os.linesep
-                    summary += "\t\tTasks:" + os.linesep
+                    summary += f"\t\tVersion: {v.id} ({v.name}) based on {v.base_model}" + os.linesep
+                    summary += "\t\t\tTasks:" + os.linesep
                     for t in v.tasks:
-                        summary += f"\t\t\t{t.name}" + os.linesep
+                        summary += f"\t\t\t\t{t.name}" + os.linesep
                     summary += os.linesep
                 summary += os.linesep
 
         self.logger.info(summary)
-
 
 
     def do_work(self):
@@ -199,127 +206,3 @@ class Processor:
                     if future.exception() is not None:
                         e = future.exception()
                         logging.error("%s error occurred: %s", type(e), e, stack_info=True, exc_info=True)
-
-
-    # def verify_hash(self, file_path, expected_hash):
-    #     '''
-    #     Verify the SHA256 hash of a file.
-    #     '''
-    #     sha256 = hashlib.sha256()
-    #     filesize = os.path.getsize(file_path)
-
-    #     progress_bar = tqdm(desc="Verifying Download", total=filesize, unit='B', unit_scale=True, leave=False, colour='blue')
-
-    #     with open(file_path, "rb") as f:
-    #         for chunk in iter(lambda: f.read(4096), b""):
-    #             progress_bar.update(len(chunk))
-    #             sha256.update(chunk)
-
-    #     progress_bar.close()
-    #     result_hash = sha256.hexdigest().upper()
-    #     expected_hash = expected_hash.upper()
-
-    #     return result_hash == expected_hash
-
-
-    # def download_file_or_image(self, url, output_path, sha256_hash='', retry_count=0, max_retries=3):
-    #     '''
-    #     Download a file or image from the provided URL.
-    #     '''
-    #     progress_bar = None
-
-    #     try:
-
-    #         # Check if the file already exists
-    #         if os.path.exists(output_path):
-    #             # Are we verifying a existing files?
-    #             if self.skip_existing_verification is False:
-    #                 # Do we have a hash to check against?
-    #                 if sha256_hash is not None and sha256_hash != '':
-    #                     # Check if the file Hash matches, if not, continue to download.
-    #                     if self.verify_hash(output_path, sha256_hash):
-    #                         # If it does retorn
-    #                         return True
-    #                     else:
-    #                         # Throw an error if the existing haah is bad and handle it in the exception block.
-    #                         raise FailedHashCheckException("File failed hash check on existing completed file")
-    #                 else:
-    #                     # Skip files without hashes.
-    #                     return True
-    #             else:
-    #                 # Skip verification.
-    #                 return True
-
-    #         output_path_tmp = output_path + '.tmp'
-    #         os.makedirs(os.path.dirname(output_path_tmp), exist_ok=True)
-
-    #         progress_bar = None
-    #         title = "Downloading"
-    #         color = 'YELLOW'
-    #         mode = 'wb'
-
-    #         if retry_count > 0:
-    #             title = f"Downloading Retry: {retry_count}/{max_retries}"
-    #             self.logger.warning("Downloading Retry for: %s %s %s", url,retry_count, max_retries)
-
-    #         headers = {"Authorization": f"Bearer {self.token}"}
-
-    #         if os.path.exists(output_path_tmp):
-    #             # Resuming existing download.
-    #             headers['Range'] = f'bytes={os.path.getsize(output_path_tmp)}-'
-    #             color = 'MAGENTA'
-    #             mode = 'ab'
-    #             title = 'Resumed Download'
-
-    #         response = self.session.get(url, stream=True, timeout=(20, 40), headers=headers)
-
-    #         if response.status_code == 404:
-    #             self.logger.warning("File not found: %s", url)
-    #             return False
-
-    #         if response.status_code == 416:
-    #             self.logger.warning(f"could not resume download, resume was: %s %s", headers['Range'], url)
-    #             return False
-
-    #         response.raise_for_status()
-
-    #         total_size = int(response.headers.get('content-length', 0))
-
-    #         progress_bar = tqdm(desc=title, total=total_size, unit='B', unit_scale=True, leave=False, colour=color)
-
-    #         with open(output_path_tmp, mode) as file:
-    #             for chunk in response.iter_content(chunk_size=8192):
-    #                 if chunk:
-    #                     progress_bar.update(len(chunk))
-    #                     file.write(chunk)
-
-    #         progress_bar.close()
-
-    #         os.rename(output_path_tmp, output_path)
-
-    #         if sha256_hash is not None and sha256_hash != '':
-    #             if self.verify_hash(output_path, sha256_hash) is False:
-    #                 raise FailedHashCheckException("File failed hash check after download")
-
-    #         return True
-
-    #     except (FailedHashCheckException) as e:
-    #         if retry_count < max_retries:
-    #             os.rename(output_path, output_path + f'.failed_hash{retry_count}')
-    #             time.sleep(self.retry_delay)
-    #             return self.download_file_or_image(url, output_path, sha256_hash, retry_count, max_retries)
-    #         else:
-    #             self.logger.exception("Hash verification failed for %s renaming file and re-downloading", url, exc_info=e)
-    #             return False
-
-    #     except (requests.RequestException, requests.HTTPError, requests.Timeout, requests.ConnectTimeout, requests.ReadTimeout, requests.exceptions.ChunkedEncodingError, urllib3.exceptions.ProtocolError, urllib3.exceptions.IncompleteRead) as e:
-    #         if retry_count < max_retries:
-    #             time.sleep(self.retry_delay)
-    #             return self.download_file_or_image(url, output_path, sha256_hash, retry_count + 1, max_retries)
-    #         else:
-    #             self.logger.exception("exception %s", url, exc_info=e)
-    #             return False
-
-    #     finally:
-    #         if progress_bar:
-    #             progress_bar.close()

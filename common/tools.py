@@ -12,7 +12,7 @@ class Tools:
     '''
 
     def __new__(cls):
-        raise TypeError('Static classes cannot be instantiated')    
+        raise TypeError('Static classes cannot be instantiated')
 
     @staticmethod
     def sanitize_directory_name(name):
@@ -78,7 +78,7 @@ class Tools:
 
         # Reduce multiple underscores to single and trim leading/trailing underscores and dots
         name = re.sub(r'__+', '_', name).strip('_.')
-    
+
         return name.strip()[:max_length]  # Limit length to max_length
 
     # @staticmethod
@@ -99,3 +99,4 @@ class Tools:
     #     name = re.sub(r'__+', '_', name)
 
     #     return name
+    

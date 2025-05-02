@@ -73,7 +73,7 @@ class DownloadFile(Task):
 
             if retry_count > 0:
                 title = f"Downloading Retry: {retry_count}/{max_retries}"
-                self.logger.warning("Downloading Retry for: %s %s %s", url,retry_count, max_retries)
+                self.logger.debug("Downloading Retry for: %s %s %s", url,retry_count, max_retries)
 
             headers = {"Authorization": f"Bearer {self.token}"}
 
@@ -87,11 +87,11 @@ class DownloadFile(Task):
             response = requests.get(url, stream=True, timeout=(20, 40), headers=headers)
 
             if response.status_code == 404:
-                self.logger.warning("File not found: %s", url)
+                self.logger.debug("File not found: %s", url)
                 return False
 
             if response.status_code == 416:
-                self.logger.warning("could not resume download, resume was: %s %s", headers['Range'], url)
+                self.logger.debug("could not resume download, resume was: %s %s", headers['Range'], url)
                 return False
 
             response.raise_for_status()

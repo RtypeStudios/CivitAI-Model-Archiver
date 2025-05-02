@@ -24,6 +24,7 @@ if __name__ == "__main__":
     parser.add_argument("--token", type=str, default=None, help="API Token for Civitai.")
     parser.add_argument("--output_dir", type=str, default='model_archives', help="The place to output the downloads, defaults to 'model_archives'.")
     parser.add_argument("--skip_existing_verification", action='store_true', default=False, help="Verifiy already downloaded files that have a hash value.")
+    parser.add_argument("--only_base_models", nargs='+', type=str, help="Filter model version by the base model they are built on (SDXL, SD 1.5, Pony, Flux, ETC) see readme for list.")
     args = parser.parse_args()
 
     # Validate input arguments.
@@ -36,7 +37,13 @@ if __name__ == "__main__":
         sys.exit(1)
 
     # Build processor.
-    processor = Processor(args.output_dir, args.token, args.max_tries, args.retry_delay, args.max_threads, args.skip_existing_verification)
+    processor = Processor(args.output_dir, 
+                          args.token, 
+                          args.max_tries, 
+                          args.retry_delay,
+                          args.max_threads, 
+                          args.skip_existing_verification,
+                          args.only_base_models)
 
     # Process provided users.
     if args.usernames is not None:
