@@ -1,18 +1,14 @@
-import hashlib
 import logging
 import urllib.parse
 import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
-import time
 from tqdm import tqdm
 import requests
-import urllib3
 
 from common.tools import Tools
 from models.model import Model
 from models.version import Version
-from exceptions.failed_hash_check_exception import FailedHashCheckException
-from tasks.download import Download
+from tasks.download_file import DownloadFile
 from tasks.write_description import WriteDescription
 from tasks.write_metadata import WriteMetadata
 from tasks.write_trained_words import WriteTrainedWords
@@ -106,11 +102,23 @@ class Processor:
             current_version.tasks.append(WriteTrainedWords(version_output_path, version.get('trainedWords', [])))
 
             for model_file in version['files']:
-                current_version.tasks.append(Download(model_file['name'], version_output_path, model_file['downloadUrl'], model_file['hashes']['SHA256'], model_file['sizeKB']))
+                current_version.tasks.append(DownloadFile(self.token, 
+                                                          model_file['name'], 
+                                                          version_output_path, 
+                                                          model_file['downloadUrl'], 
+                                                          model_file['hashes']['SHA256'], 
+                                                          model_file['sizeKB'], 
+                                                          rety_delay=self.retry_delay, 
+                                                          skip_existing_verification=self.skip_existing_verification))
 
             for idx, model_image in enumerate(version['images']):
                 file_extension = Tools.get_file_extension_regex(model_image['url'])
-                current_version.tasks.append(Download(f'{idx}.{file_extension}', version_output_path, model_image['url']))
+                current_version.tasks.append(DownloadFile(self.token, 
+                                                          f'{idx}.{file_extension}', 
+                                                          version_output_path, 
+                                                          model_image['url'], 
+                                                          rety_delay=self.retry_delay, 
+                                                          skip_existing_verification=self.skip_existing_verification))
 
             current_model.versions.append(current_version)
 
@@ -181,15 +189,7 @@ class Processor:
                 futures = []
 
                 for task in tasks:
-                    output_path_and_filename = os.path.join(task.output_path, task.file_name)
-                    if isinstance(task, Download):
-                        futures.append(executor.submit(self.download_file_or_image, task.url, output_path_and_filename, task.sha256_hash))
-                    elif isinstance(task, WriteMetadata):
-                        futures.append(executor.submit(Tools.write_file, output_path_and_filename, task.metadata))
-                    elif isinstance(task, WriteDescription):
-                        futures.append(executor.submit(Tools.write_file, output_path_and_filename, task.description))
-                    elif isinstance(task, WriteTrainedWords):
-                        futures.append(executor.submit(Tools.write_file, output_path_and_filename, task.trained_words))
+                    futures.append(executor.submit(task.run))
 
                 for future in as_completed(futures):
                     pbar.update(1)
@@ -201,125 +201,125 @@ class Processor:
                         logging.error("%s error occurred: %s", type(e), e, stack_info=True, exc_info=True)
 
 
-    def verify_hash(self, file_path, expected_hash):
-        '''
-        Verify the SHA256 hash of a file.
-        '''
-        sha256 = hashlib.sha256()
-        filesize = os.path.getsize(file_path)
+    # def verify_hash(self, file_path, expected_hash):
+    #     '''
+    #     Verify the SHA256 hash of a file.
+    #     '''
+    #     sha256 = hashlib.sha256()
+    #     filesize = os.path.getsize(file_path)
 
-        progress_bar = tqdm(desc="Verifying Download", total=filesize, unit='B', unit_scale=True, leave=False, colour='blue')
+    #     progress_bar = tqdm(desc="Verifying Download", total=filesize, unit='B', unit_scale=True, leave=False, colour='blue')
 
-        with open(file_path, "rb") as f:
-            for chunk in iter(lambda: f.read(4096), b""):
-                progress_bar.update(len(chunk))
-                sha256.update(chunk)
+    #     with open(file_path, "rb") as f:
+    #         for chunk in iter(lambda: f.read(4096), b""):
+    #             progress_bar.update(len(chunk))
+    #             sha256.update(chunk)
 
-        progress_bar.close()
-        result_hash = sha256.hexdigest().upper()
-        expected_hash = expected_hash.upper()
+    #     progress_bar.close()
+    #     result_hash = sha256.hexdigest().upper()
+    #     expected_hash = expected_hash.upper()
 
-        return result_hash == expected_hash
+    #     return result_hash == expected_hash
 
 
-    def download_file_or_image(self, url, output_path, sha256_hash='', retry_count=0, max_retries=3):
-        '''
-        Download a file or image from the provided URL.
-        '''
-        progress_bar = None
+    # def download_file_or_image(self, url, output_path, sha256_hash='', retry_count=0, max_retries=3):
+    #     '''
+    #     Download a file or image from the provided URL.
+    #     '''
+    #     progress_bar = None
 
-        try:
+    #     try:
 
-            # Check if the file already exists
-            if os.path.exists(output_path):
-                # Are we verifying a existing files?
-                if self.skip_existing_verification is False:
-                    # Do we have a hash to check against?
-                    if sha256_hash is not None and sha256_hash != '':
-                        # Check if the file Hash matches, if not, continue to download.
-                        if self.verify_hash(output_path, sha256_hash):
-                            # If it does retorn
-                            return True
-                        else:
-                            # Throw an error if the existing haah is bad and handle it in the exception block.
-                            raise FailedHashCheckException("File failed hash check on existing completed file")
-                    else:
-                        # Skip files without hashes.
-                        return True
-                else:
-                    # Skip verification.
-                    return True
+    #         # Check if the file already exists
+    #         if os.path.exists(output_path):
+    #             # Are we verifying a existing files?
+    #             if self.skip_existing_verification is False:
+    #                 # Do we have a hash to check against?
+    #                 if sha256_hash is not None and sha256_hash != '':
+    #                     # Check if the file Hash matches, if not, continue to download.
+    #                     if self.verify_hash(output_path, sha256_hash):
+    #                         # If it does retorn
+    #                         return True
+    #                     else:
+    #                         # Throw an error if the existing haah is bad and handle it in the exception block.
+    #                         raise FailedHashCheckException("File failed hash check on existing completed file")
+    #                 else:
+    #                     # Skip files without hashes.
+    #                     return True
+    #             else:
+    #                 # Skip verification.
+    #                 return True
 
-            output_path_tmp = output_path + '.tmp'
-            os.makedirs(os.path.dirname(output_path_tmp), exist_ok=True)
+    #         output_path_tmp = output_path + '.tmp'
+    #         os.makedirs(os.path.dirname(output_path_tmp), exist_ok=True)
 
-            progress_bar = None
-            title = "Downloading"
-            color = 'YELLOW'
-            mode = 'wb'
+    #         progress_bar = None
+    #         title = "Downloading"
+    #         color = 'YELLOW'
+    #         mode = 'wb'
 
-            if retry_count > 0:
-                title = f"Downloading Retry: {retry_count}/{max_retries}"
-                self.logger.warning("Downloading Retry for: %s %s %s", url,retry_count, max_retries)
+    #         if retry_count > 0:
+    #             title = f"Downloading Retry: {retry_count}/{max_retries}"
+    #             self.logger.warning("Downloading Retry for: %s %s %s", url,retry_count, max_retries)
 
-            headers = {"Authorization": f"Bearer {self.token}"}
+    #         headers = {"Authorization": f"Bearer {self.token}"}
 
-            if os.path.exists(output_path_tmp):
-                # Resuming existing download.
-                headers['Range'] = f'bytes={os.path.getsize(output_path_tmp)}-'
-                color = 'MAGENTA'
-                mode = 'ab'
-                title = 'Resumed Download'
+    #         if os.path.exists(output_path_tmp):
+    #             # Resuming existing download.
+    #             headers['Range'] = f'bytes={os.path.getsize(output_path_tmp)}-'
+    #             color = 'MAGENTA'
+    #             mode = 'ab'
+    #             title = 'Resumed Download'
 
-            response = self.session.get(url, stream=True, timeout=(20, 40), headers=headers)
+    #         response = self.session.get(url, stream=True, timeout=(20, 40), headers=headers)
 
-            if response.status_code == 404:
-                self.logger.warning("File not found: %s", url)
-                return False
+    #         if response.status_code == 404:
+    #             self.logger.warning("File not found: %s", url)
+    #             return False
 
-            if response.status_code == 416:
-                self.logger.warning(f"could not resume download, resume was: %s %s", headers['Range'], url)
-                return False
+    #         if response.status_code == 416:
+    #             self.logger.warning(f"could not resume download, resume was: %s %s", headers['Range'], url)
+    #             return False
 
-            response.raise_for_status()
+    #         response.raise_for_status()
 
-            total_size = int(response.headers.get('content-length', 0))
+    #         total_size = int(response.headers.get('content-length', 0))
 
-            progress_bar = tqdm(desc=title, total=total_size, unit='B', unit_scale=True, leave=False, colour=color)
+    #         progress_bar = tqdm(desc=title, total=total_size, unit='B', unit_scale=True, leave=False, colour=color)
 
-            with open(output_path_tmp, mode) as file:
-                for chunk in response.iter_content(chunk_size=8192):
-                    if chunk:
-                        progress_bar.update(len(chunk))
-                        file.write(chunk)
+    #         with open(output_path_tmp, mode) as file:
+    #             for chunk in response.iter_content(chunk_size=8192):
+    #                 if chunk:
+    #                     progress_bar.update(len(chunk))
+    #                     file.write(chunk)
 
-            progress_bar.close()
+    #         progress_bar.close()
 
-            os.rename(output_path_tmp, output_path)
+    #         os.rename(output_path_tmp, output_path)
 
-            if sha256_hash is not None and sha256_hash != '':
-                if self.verify_hash(output_path, sha256_hash) is False:
-                    raise FailedHashCheckException("File failed hash check after download")
+    #         if sha256_hash is not None and sha256_hash != '':
+    #             if self.verify_hash(output_path, sha256_hash) is False:
+    #                 raise FailedHashCheckException("File failed hash check after download")
 
-            return True
+    #         return True
 
-        except (FailedHashCheckException) as e:
-            if retry_count < max_retries:
-                os.rename(output_path, output_path + f'.failed_hash{retry_count}')
-                time.sleep(self.retry_delay)
-                return self.download_file_or_image(url, output_path, sha256_hash, retry_count, max_retries)
-            else:
-                self.logger.exception("Hash verification failed for %s renaming file and re-downloading", url, exc_info=e)
-                return False
+    #     except (FailedHashCheckException) as e:
+    #         if retry_count < max_retries:
+    #             os.rename(output_path, output_path + f'.failed_hash{retry_count}')
+    #             time.sleep(self.retry_delay)
+    #             return self.download_file_or_image(url, output_path, sha256_hash, retry_count, max_retries)
+    #         else:
+    #             self.logger.exception("Hash verification failed for %s renaming file and re-downloading", url, exc_info=e)
+    #             return False
 
-        except (requests.RequestException, requests.HTTPError, requests.Timeout, requests.ConnectTimeout, requests.ReadTimeout, requests.exceptions.ChunkedEncodingError, urllib3.exceptions.ProtocolError, urllib3.exceptions.IncompleteRead) as e:
-            if retry_count < max_retries:
-                time.sleep(self.retry_delay)
-                return self.download_file_or_image(url, output_path, sha256_hash, retry_count + 1, max_retries)
-            else:
-                self.logger.exception("exception %s", url, exc_info=e)
-                return False
+    #     except (requests.RequestException, requests.HTTPError, requests.Timeout, requests.ConnectTimeout, requests.ReadTimeout, requests.exceptions.ChunkedEncodingError, urllib3.exceptions.ProtocolError, urllib3.exceptions.IncompleteRead) as e:
+    #         if retry_count < max_retries:
+    #             time.sleep(self.retry_delay)
+    #             return self.download_file_or_image(url, output_path, sha256_hash, retry_count + 1, max_retries)
+    #         else:
+    #             self.logger.exception("exception %s", url, exc_info=e)
+    #             return False
 
-        finally:
-            if progress_bar:
-                progress_bar.close()
+    #     finally:
+    #         if progress_bar:
+    #             progress_bar.close()

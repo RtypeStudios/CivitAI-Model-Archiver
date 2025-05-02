@@ -1,32 +1,18 @@
 import logging
-import os
 import time
 import argparse
 import sys
 
 from core.processor import Processor
 
-# Constants
-#SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-#LOG_FILE_PATH = 
-
-# logger = logging.getLogger('default')
-# logger.setLevel(logging.DEBUG)
-# file_handler_md = logging.FileHandler(LOG_FILE_PATH, encoding='utf-8')
-# file_handler_md.setLevel(logging.DEBUG)
-# file_handler_md.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
-# logger.addHandler(file_handler_md)
-
-logging.basicConfig(
-    level=logging.INFO, 
-    format='%(asctime)s - %(levelname)s - %(message)s', 
-    handlers=[
-        logging.FileHandler(f"log-{time.strftime('%Y%m%d%H%M%S')}.log"),
-        logging.StreamHandler()
-    ])
-
-
 if __name__ == "__main__":
+
+    # Set up logging to both file and console.
+    file_logger = logging.FileHandler(f"log-{time.strftime('%Y%m%d%H%M%S')}.log")
+    file_logger.setLevel(logging.DEBUG)
+    stream_logger = logging.StreamHandler()
+    stream_logger.setLevel(logging.INFO)
+    logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s',handlers=[file_logger, stream_logger])
 
     # Argument parsing.
     parser = argparse.ArgumentParser(description="Download model files and images from Civitai API.")
