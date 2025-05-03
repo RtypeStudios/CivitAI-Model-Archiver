@@ -106,7 +106,13 @@ class Processor:
             current_version.tasks.append(WriteTrainedWords(version_output_path, version.get('trainedWords', [])))
 
             for model_file in version['files']:
-                current_version.tasks.append(Download(model_file['name'], version_output_path, model_file['downloadUrl'], model_file['hashes']['SHA256'], model_file['sizeKB']))
+
+                model_hash = ''
+
+                if 'hashes' in model_file and 'SHA256' in model_file['hashes']:
+                    model_hash = model_file['hashes']['SHA256']
+                
+                current_version.tasks.append(Download(model_file['name'], version_output_path, model_file['downloadUrl'], model_hash, model_file['sizeKB']))
 
             for idx, model_image in enumerate(version['images']):
                 file_extension = Tools.get_file_extension_regex(model_image['url'])
@@ -205,6 +211,8 @@ class Processor:
         '''
         Verify the SHA256 hash of a file.
         '''
+        print(expected_hash)
+
         sha256 = hashlib.sha256()
         filesize = os.path.getsize(file_path)
 
