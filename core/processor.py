@@ -78,7 +78,11 @@ class Processor:
         model_data = Tools.get_json_with_retry(self.session, f"{self.base_url}/{model_id}?{urllib.parse.urlencode({ "nsfw": "true" })}", self.token, self.retry_delay)
 
         # Add model data to the summary.
-        self.build_tasks(model_data['creator']['username'], model_data)
+        user = 'Unknown'
+        if 'creator' in model_data and 'username' in model_data['creator']:
+            user = model_data['creator']['username']
+
+        self.build_tasks(user, model_data)
 
 
     def build_tasks(self, username:str, model_data: dict[str, object]) -> Model:
@@ -211,8 +215,6 @@ class Processor:
         '''
         Verify the SHA256 hash of a file.
         '''
-        print(expected_hash)
-
         sha256 = hashlib.sha256()
         filesize = os.path.getsize(file_path)
 
