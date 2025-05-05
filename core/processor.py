@@ -30,7 +30,11 @@ class Processor:
         self.retry_delay = retry_delay
         self.max_threads = max_threads
         self.skip_existing_verification = skip_existing_verification
-        self.only_base_models = [s.upper() for s in only_base_models]
+
+        if only_base_models is not None:
+            self.only_base_models = [s.upper() for s in only_base_models]
+        else:
+            self.only_base_models = None
 
         self.work_summary = {}
         self.base_url = "https://civitai.com/api/v1/models"
