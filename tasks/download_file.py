@@ -86,6 +86,10 @@ class DownloadFile(Task):
 
             response = requests.get(url, stream=True, timeout=(20, 40), headers=headers)
 
+            if response.status_code == 401:
+                self.logger.debug("Unauthorized for url (Model Removed?): %s", url)
+                return False
+
             if response.status_code == 404:
                 self.logger.debug("File not found: %s", url)
                 return False
