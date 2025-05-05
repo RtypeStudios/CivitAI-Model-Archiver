@@ -114,24 +114,19 @@ class Processor:
                 continue
 
             for model_file in version['files']:
-<<<<<<< HEAD
-                current_version.tasks.append(DownloadFile(self.token,
-                                                        model_file['name'],
-                                                        version_output_path,
-                                                        model_file['downloadUrl'],
-                                                        model_file['hashes']['SHA256'],
-                                                        model_file['sizeKB'],
-                                                        retry_delay=self.retry_delay,
-                                                        skip_existing_verification=self.skip_existing_verification))
-=======
-
                 model_hash = ''
 
                 if 'hashes' in model_file and 'SHA256' in model_file['hashes']:
                     model_hash = model_file['hashes']['SHA256']
-                
-                current_version.tasks.append(Download(model_file['name'], version_output_path, model_file['downloadUrl'], model_hash, model_file['sizeKB']))
->>>>>>> e313b1a6d564d204ffe15b8cc18578614419a53c
+
+                current_version.tasks.append(DownloadFile(self.token,
+                                                        model_file['name'],
+                                                        version_output_path,
+                                                        model_file['downloadUrl'],
+                                                        model_hash,
+                                                        model_file['sizeKB'],
+                                                        retry_delay=self.retry_delay,
+                                                        skip_existing_verification=self.skip_existing_verification))
 
             for idx, model_image in enumerate(version['images']):
                 file_extension = Tools.get_file_extension_regex(model_image['url'])
