@@ -93,6 +93,64 @@ default=None
 You can also give the script this 5 extra Arguments
 ```
 
+--only_base_models
+```
++ default=,
++ "Filter model version by the base model they are built on (SDXL, SD 1.5, Pony, Flux, ETC) see readme for list."
++ example: --only_base_models "SD 1.4" "SD 2.0" "SD 3.5"
+```
+
+Some examples:
+| Base Models      
+| :---------------- 
+| `SD 1.4`
+| `SD 1.5`
+| `SD 1.5 LCM`
+| `SD 1.5 Hyper`
+| `SD 2.0`
+| `SD 2.0 768`
+| `SD 2.1`
+| `SD 2.1 768`
+| `SD 2.1 Unclip`
+| `SDXL 0.9`
+| `SDXL 1.0`
+| `SD 3`
+| `SD 3.5`
+| `SD 3.5 Medium`
+| `SD 3.5 Large`
+| `SD 3.5 Large Turbo`
+| `Pony`
+| `Flux.1 S`
+| `Flux.1 D`
+| `AuraFlow`
+| `SDXL 1.0 LCM`
+| `SDXL Distilled`
+| `SDXL Turbo`
+| `SDXL Lightning`
+| `SDXL Hyper`
+| `Stable Cascade`
+| `SVD`
+| `SVD XT`
+| `Playground v2`
+| `PixArt a`
+| `PixArt E`
+| `Hunyuan 1`
+| `Hunyuan Video`
+| `Lumina`
+| `Kolors`
+| `Illustrious`
+| `Mochi`
+| `NSFW MASTER FLUX`
+| `LTXV`
+| `CogVideoX`
+| `NoobAI`
+| `Wan Video`
+| `HiDream`
+| `Other`
+
+
+
+
 --retry_delay 
 ```
 + default=10,
@@ -130,6 +188,10 @@ You can create your API Key here
  Scoll down until  the end and you  find this Box
 
 ![API](https://github.com/RtypeStudios/CivitAI-Model-Archiver/raw/refs/heads/main/api_login_example.png)
+
+
+# Alternatives:
+- [A powerful go based downloader, with DB functionality and filter](https://github.com/dreamfast/go-civitai-downloader)
 
 # Updates & Bugfixes
 coming soon ...

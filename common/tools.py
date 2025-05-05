@@ -3,6 +3,7 @@ import os
 import re
 import sys
 import time
+import unicodedata
 import requests
 
 class Tools:
@@ -11,7 +12,7 @@ class Tools:
     '''
 
     def __new__(cls):
-        raise TypeError('Static classes cannot be instantiated')    
+        raise TypeError('Static classes cannot be instantiated')
 
     @staticmethod
     def sanitize_directory_name(name):
@@ -67,33 +68,35 @@ class Tools:
 
         return data
 
+
     @staticmethod
-    def sanitize_name(name, folder_name=None, max_length=200, subfolder=None, output_dir=None, username=None):
+    def sanitize_name(name, max_length=200):
         """Sanitize a name for use as a file or folder name."""
-        base_name, extension = os.path.splitext(name)
-
-        if folder_name and base_name == folder_name:
-            return name
-
-        if folder_name:
-            base_name = base_name.replace(folder_name, "").strip("_")
 
         # Remove problematic characters and control characters
-        base_name = re.sub(r'[<>:"/\\|?*\x00-\x1f\x7f-\x9f]', '_', base_name)
-
-        # Handle reserved names (Windows specific)
-        reserved_names = {"CON", "PRN", "AUX", "NUL"} | {f"COM{i}" for i in range(1, 10)} | {f"LPT{i}" for i in range(1, 10)}
-        if base_name.upper() in reserved_names:
-            base_name = '_'
+        name = re.sub(r'[<>:"/\\|?*\x00-\x1f\x7f-\x9f]', '_', name)
 
         # Reduce multiple underscores to single and trim leading/trailing underscores and dots
-        base_name = re.sub(r'__+', '_', base_name).strip('_.')
-        
-        # Calculate max length of base name considering the path length
-        if subfolder and output_dir and username:
-            path_length = len(os.path.join(output_dir, username, subfolder))
-            max_base_length = max_length - len(extension) - path_length
-            base_name = base_name[:max_base_length].rsplit('_', 1)[0]
+        name = re.sub(r'__+', '_', name).strip('_.')
 
-        sanitized_name = base_name + extension
-        return sanitized_name.strip()
+        return name.strip()[:max_length]  # Limit length to max_length
+
+    # @staticmethod
+    # def clean(name):
+    #     """
+    #     Clean a string to make it safe for use in filesystems.
+    #     """
+    #     # Normalize Unicode characters to their closest ASCII equivalent
+    #     name = unicodedata.normalize('NFKD', name).encode('ascii', 'ignore').decode('ascii')
+
+    #     # Remove invalid filesystem characters
+    #     name = re.sub(r'[<>:"/\\|?*\x00-\x1f]', '_', name)
+
+    #     # Remove leading/trailing whitespace and dots
+    #     name = name.strip().strip('.')
+
+    #     # Replace multiple consecutive underscores with a single underscore
+    #     name = re.sub(r'__+', '_', name)
+
+    #     return name
+    

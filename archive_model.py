@@ -1,32 +1,18 @@
 import logging
-import os
 import time
 import argparse
 import sys
 
 from core.processor import Processor
 
-# Constants
-#SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-#LOG_FILE_PATH = 
-
-# logger = logging.getLogger('default')
-# logger.setLevel(logging.DEBUG)
-# file_handler_md = logging.FileHandler(LOG_FILE_PATH, encoding='utf-8')
-# file_handler_md.setLevel(logging.DEBUG)
-# file_handler_md.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
-# logger.addHandler(file_handler_md)
-
-logging.basicConfig(
-    level=logging.INFO, 
-    format='%(asctime)s - %(levelname)s - %(message)s', 
-    handlers=[
-        logging.FileHandler(f"log-{time.strftime('%Y%m%d%H%M%S')}.log"),
-        logging.StreamHandler()
-    ])
-
-
 if __name__ == "__main__":
+
+    # Set up logging to both file and console.
+    file_logger = logging.FileHandler(f"log-{time.strftime('%Y%m%d%H%M%S')}.log")
+    file_logger.setLevel(logging.DEBUG)
+    stream_logger = logging.StreamHandler()
+    stream_logger.setLevel(logging.INFO)
+    logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s',handlers=[file_logger, stream_logger])
 
     # Argument parsing.
     parser = argparse.ArgumentParser(description="Download model files and images from Civitai API.")
@@ -38,6 +24,7 @@ if __name__ == "__main__":
     parser.add_argument("--token", type=str, default=None, help="API Token for Civitai.")
     parser.add_argument("--output_dir", type=str, default='model_archives', help="The place to output the downloads, defaults to 'model_archives'.")
     parser.add_argument("--skip_existing_verification", action='store_true', default=False, help="Verifiy already downloaded files that have a hash value.")
+    parser.add_argument("--only_base_models", nargs='+', type=str, help="Filter model version by the base model they are built on (SDXL, SD 1.5, Pony, Flux, ETC) see readme for list.")
     args = parser.parse_args()
 
     # Validate input arguments.
@@ -50,7 +37,13 @@ if __name__ == "__main__":
         sys.exit(1)
 
     # Build processor.
-    processor = Processor(args.output_dir, args.token, args.max_tries, args.retry_delay, args.max_threads, args.skip_existing_verification)
+    processor = Processor(args.output_dir, 
+                          args.token, 
+                          args.max_tries, 
+                          args.retry_delay,
+                          args.max_threads, 
+                          args.skip_existing_verification,
+                          args.only_base_models)
 
     # Process provided users.
     if args.usernames is not None:

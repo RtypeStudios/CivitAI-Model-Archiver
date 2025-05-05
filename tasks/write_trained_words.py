@@ -1,3 +1,5 @@
+import os
+from common.tools import Tools
 from tasks.task import Task
 
 class WriteTrainedWords(Task):
@@ -7,4 +9,12 @@ class WriteTrainedWords(Task):
     def __init__(self, output_path:str, trained_words:str):
         file_name = 'trained_words.txt'
         super().__init__(f'Write Trained Words: \"{file_name}\" to: \"{output_path}\"', output_path, file_name)
-        self.trained_words = "\n".join(trained_words)
+        self.trained_words = trained_words
+
+    def run(self):
+        '''
+        Write the trained word list to a text file.
+        '''
+        self.logger.debug('Writing Metadata')
+        Tools.write_file(os.path.join(self.output_path, self.file_name), "\n".join(self.trained_words))
+        return True;
