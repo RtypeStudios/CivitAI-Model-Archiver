@@ -3,9 +3,9 @@ import urllib.parse
 import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from tqdm import tqdm
-import requests
 
 from common.tools import Tools
+from core.metadata_extractor import MetadataExtractor
 from models.model import Model
 from models.version import Version
 from tasks.download_file import DownloadFile
@@ -19,11 +19,10 @@ class Processor:
     '''
     Class to process the model data and download files from CivitAI.
     '''
-    def __init__(self, output_dir:str, token:str, max_tries:int, retry_delay:int, max_threads:int, skip_existing_verification:bool, only_base_models:list[str]):
+    def __init__(self, output_dir:str, token:str, max_tries:int, retry_delay:int, max_threads:int, skip_existing_verification:bool, only_base_models:list[str], metadata_extractor:MetadataExtractor):
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging.DEBUG)
 
-        self.session = requests.Session()
         self.output_dir = Tools.sanitize_directory_name(output_dir)
         self.token = token
         self.max_tries = max_tries
@@ -31,6 +30,7 @@ class Processor:
         self.max_threads = max_threads
         self.skip_existing_verification = skip_existing_verification
         self.only_base_models = [s.upper() for s in only_base_models]
+        self.metadata_extractor = metadata_extractor
 
         self.work_summary = {}
         self.base_url = "https://civitai.com/api/v1/models"
@@ -42,114 +42,133 @@ class Processor:
             self.logger.info("Only fetching models versions based on %s.", "".join(self.only_base_models))
 
 
-    # ------------------------------------
-    # Main Worker.
-    # ------------------------------------
+    # # ------------------------------------
+    # # Main Worker.
+    # # ------------------------------------
 
-    def archive_user(self, username:str):
-        '''
-        Exctract all models for a given user.
-        '''
-        page = f"{self.base_url}?{urllib.parse.urlencode({ "username": username, "nsfw": "true" })}"
+    # def archive_user(self, username:str):
+    #     '''
+    #     Exctract all models for a given user.
+    #     '''
+    #     page = f"{self.base_url}?{urllib.parse.urlencode({ "username": username, "nsfw": "true" })}"
 
-        while True:
-            if page is None:
-                self.logger.info("End of pagination reached: 'next_page' is None.")
-                break
+    #     while True:
+    #         if page is None:
+    #             self.logger.info("End of pagination reached: 'next_page' is None.")
+    #             break
 
-            user_data_page = Tools.get_json_with_retry(self.session, page, self.token, self.retry_delay)
+    #         user_data_page = Tools.get_json_with_retry(page, self.token, self.retry_delay)
 
-            for model_data in user_data_page['items']:
-                self.build_tasks(username, model_data)
+    #         for model_data in user_data_page['items']:
+    #             self.build_tasks(username, model_data)
 
-            metadata = user_data_page.get('metadata', {})
-            page = metadata.get('nextPage')
+    #         metadata = user_data_page.get('metadata', {})
+    #         page = metadata.get('nextPage')
 
-            if not metadata and not user_data_page['items']:
-                self.logger.warning("Termination condition met: 'metadata' is empty.")
-                break
-
-
-    def archive_model(self, model_id):
-        '''
-        Extract model data.
-        '''
-        # Create output directory for model archives
-        model_data = Tools.get_json_with_retry(self.session, f"{self.base_url}/{model_id}?{urllib.parse.urlencode({ "nsfw": "true" })}", self.token, self.retry_delay)
-
-        # Add model data to the summary.
-        user = 'Unknown'
-        if 'creator' in model_data and 'username' in model_data['creator']:
-            user = model_data['creator']['username']
-
-        self.build_tasks(user, model_data)
+    #         if not metadata and not user_data_page['items']:
+    #             self.logger.warning("Termination condition met: 'metadata' is empty.")
+    #             break
 
 
-    def build_tasks(self, username:str, model_data: dict[str, object]) -> Model:
+    # def archive_model(self, model_id):
+    #     '''
+    #     Extract model data.
+    #     '''
+    #     # Create output directory for model archives
+    #     model_data = Tools.get_json_with_retry(f"{self.base_url}/{model_id}?{urllib.parse.urlencode({ "nsfw": "true" })}", self.token, self.retry_delay)
+
+    #     # Add model data to the summary.
+    #     user = 'Unknown'
+    #     if 'creator' in model_data and 'username' in model_data['creator']:
+    #         user = model_data['creator']['username']
+
+    #     self.build_tasks(user, model_data)
+
+
+    def build_tasks(self, usernames:list = None, modelIds:list = None) -> Model:
         '''
         Do the extraction of model data.
         '''
-        username            = Tools.sanitize_name(username, max_length=self.max_path_length)
-        model_id            = model_data['id']
-        model_name          = Tools.sanitize_name(model_data['name'], max_length=self.max_path_length)
-        model_type          = model_data['type']
-        current_model       = Model(model_id, model_name, model_type, model_data['description'])
-        model_ouput_path    = os.path.join(self.output_dir, username, f'{model_name} ({model_type})')
 
-        current_model.tasks.append(WriteMetadata(f'{model_id}.json', model_ouput_path, model_data))
-        current_model.tasks.append(WriteDescription(model_ouput_path, model_data['description']))
+        result = self.metadata_extractor.extract(usernames=usernames, model_ids=modelIds)
 
-        # Loop through the model versions.
-        for version in model_data['modelVersions']:
+        for modeil_id, model in result.items():
 
-            # Get fields from model version data
-            version_base_model      = version['baseModel'] if version['baseModel'] else ''
-            current_version         = Version(model_id, version['name'], version_base_model)
-            version_output_path     = os.path.join(model_ouput_path, f'{version["name"]} ({version_base_model})')
+            print(f"Model ID: {modeil_id}")
 
-            current_version.tasks.append(WriteTrainedWords(version_output_path, version.get('trainedWords', [])))
+            for version in model.versions:
 
-            if self.only_base_models is not None and version_base_model.upper() not in self.only_base_models:
-                self.logger.warning("Skipping condition %s, not in wanted model list", model_name)
-                continue
+                print(f"Version ID: {version.id}")
 
-            for model_file in version['files']:
-                model_hash = ''
+                for file in version.files:
+                    print(f"file ID: {file.id}")
 
-                if 'hashes' in model_file and 'SHA256' in model_file['hashes']:
-                    model_hash = model_file['hashes']['SHA256']
-
-                current_version.tasks.append(DownloadFile(self.token,
-                                                        model_file['name'],
-                                                        version_output_path,
-                                                        model_file['downloadUrl'],
-                                                        model_hash,
-                                                        model_file['sizeKB'],
-                                                        retry_delay=self.retry_delay,
-                                                        skip_existing_verification=self.skip_existing_verification))
-
-            for idx, model_image in enumerate(version['images']):
-                file_extension = Tools.get_file_extension_regex(model_image['url'])
-                current_version.tasks.append(DownloadFile(self.token,
-                                                          f'{idx}.{file_extension}',
-                                                          version_output_path,
-                                                          model_image['url'],
-                                                          retry_delay=self.retry_delay,
-                                                          skip_existing_verification=self.skip_existing_verification))
-
-            current_model.versions.append(current_version)
-
-        self.add_to_download_summary(username, current_model)
+                for asset in version.assets:
+                    print(f"Asset ID: {asset.id}")
 
 
-    def add_to_download_summary(self, username: str, model: Model):
-        '''
-        Helper method to init the models to and empty array before adding one.
-        '''
-        if username not in self.work_summary:
-            self.work_summary[username] = []
 
-        self.work_summary[username].append(model)
+        # username            = Tools.sanitize_name(username, max_length=self.max_path_length)
+        # model_id            = model_data['id']
+        # model_name          = Tools.sanitize_name(model_data['name'], max_length=self.max_path_length)
+        # model_type          = model_data['type']
+        # current_model       = Model(model_id, model_name, model_type, model_data['description'])
+        # model_ouput_path    = os.path.join(self.output_dir, username, f'{model_name} ({model_type})')
+
+        # current_model.tasks.append(WriteMetadata(f'{model_id}.json', model_ouput_path, model_data))
+        # current_model.tasks.append(WriteDescription(model_ouput_path, model_data['description']))
+
+        # # Loop through the model versions.
+        # for version in model_data['modelVersions']:
+
+        #     # Get fields from model version data
+        #     version_base_model      = version['baseModel'] if version['baseModel'] else ''
+        #     current_version         = Version(model_id, version['name'], version_base_model)
+        #     version_output_path     = os.path.join(model_ouput_path, f'{version["name"]} ({version_base_model})')
+
+        #     current_version.tasks.append(WriteTrainedWords(version_output_path, version.get('trainedWords', [])))
+
+        #     if self.only_base_models is not None and version_base_model.upper() not in self.only_base_models:
+        #         self.logger.warning("Skipping condition %s, not in wanted model list", model_name)
+        #         continue
+
+        #     for model_file in version['files']:
+        #         model_hash = ''
+
+        #         if 'hashes' in model_file and 'SHA256' in model_file['hashes']:
+        #             model_hash = model_file['hashes']['SHA256']
+
+        #         current_version.tasks.append(DownloadFile(self.token,
+        #                                                 model_file['name'],
+        #                                                 version_output_path,
+        #                                                 model_file['downloadUrl'],
+        #                                                 model_hash,
+        #                                                 model_file['sizeKB'],
+        #                                                 retry_delay=self.retry_delay,
+        #                                                 skip_existing_verification=self.skip_existing_verification))
+
+        #     for idx, model_image in enumerate(version['images']):
+        #         file_extension = Tools.get_file_extension_regex(model_image['url'])
+        #         current_version.tasks.append(DownloadFile(self.token,
+        #                                                   f'{idx}.{file_extension}',
+        #                                                   version_output_path,
+        #                                                   model_image['url'],
+        #                                                   retry_delay=self.retry_delay,
+        #                                                   skip_existing_verification=self.skip_existing_verification))
+
+        #     current_model.versions.append(current_version)
+
+        # self.add_to_download_summary(username, current_model)
+
+
+    # def add_to_download_summary(self, username: str, model: Model):
+    #     '''
+    #     Helper method to init the models to and empty array before adding one.
+    #     '''
+    #     if username not in self.work_summary:
+    #         self.work_summary[username] = []
+
+    #     self.work_summary[username].append(model)
 
 
     def summerise(self):

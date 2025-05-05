@@ -3,6 +3,7 @@ import time
 import argparse
 import sys
 
+from core.metadata_extractor import MetadataExtractor
 from core.processor import Processor
 
 if __name__ == "__main__":
@@ -37,25 +38,31 @@ if __name__ == "__main__":
         sys.exit(1)
 
     # Build processor.
-    processor = Processor(args.output_dir, 
-                          args.token, 
-                          args.max_tries, 
+    processor = Processor(args.output_dir,
+                          args.token,
+                          args.max_tries,
                           args.retry_delay,
-                          args.max_threads, 
+                          args.max_threads,
                           args.skip_existing_verification,
-                          args.only_base_models)
+                          args.only_base_models,
+                          MetadataExtractor(args.token))
 
-    # Process provided users.
-    if args.usernames is not None:
-        for u in args.usernames:
-            print(f"Processing user: {u}")
-            processor.archive_user(u)
+    processor.build_tasks()
 
-    # Process provided model ids.
-    if args.models is not None:
-        for mid in args.models:
-            print(f"Processing model with id: {mid}")
-            processor.archive_model(mid)
+
+    exit()
+
+    # # Process provided users.
+    # if args.usernames is not None:
+    #     for u in args.usernames:
+    #         print(f"Processing user: {u}")
+    #         processor.archive_user(u)
+
+    # # Process provided model ids.
+    # if args.models is not None:
+    #     for mid in args.models:
+    #         print(f"Processing model with id: {mid}")
+    #         processor.archive_model(mid)
 
     processor.summerise()
 

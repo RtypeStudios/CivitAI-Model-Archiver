@@ -3,7 +3,6 @@ import os
 import re
 import sys
 import time
-import unicodedata
 import requests
 
 class Tools:
@@ -44,7 +43,7 @@ class Tools:
             f.write(content)
 
     @staticmethod
-    def get_json_with_retry(session, url, token, retry_delay, retry_count=0, max_retries=3):
+    def get_json_with_retry(url, token, retry_delay, retry_count=0, max_retries=3):
         '''
         Make a GET request to the given URL and return the JSON response, with some retry logic built in.
         '''
@@ -52,7 +51,7 @@ class Tools:
 
         while retry_count < max_retries:
             try:
-                response = session.get(url, headers={"Content-Type": "application/json", "Authorization": f"Bearer {token}"})
+                response = requests.get(url, headers={"Content-Type": "application/json", "Authorization": f"Bearer {token}"})
                 response.raise_for_status()
                 data = response.json()
                 break  # Exit retry loop on successful response
