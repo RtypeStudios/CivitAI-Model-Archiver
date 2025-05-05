@@ -78,7 +78,11 @@ class Processor:
         model_data = Tools.get_json_with_retry(self.session, f"{self.base_url}/{model_id}?{urllib.parse.urlencode({ "nsfw": "true" })}", self.token, self.retry_delay)
 
         # Add model data to the summary.
-        self.build_tasks(model_data['creator']['username'], model_data)
+        user = 'Unknown'
+        if 'creator' in model_data and 'username' in model_data['creator']:
+            user = model_data['creator']['username']
+
+        self.build_tasks(user, model_data)
 
 
     def build_tasks(self, username:str, model_data: dict[str, object]) -> Model:
@@ -110,6 +114,7 @@ class Processor:
                 continue
 
             for model_file in version['files']:
+<<<<<<< HEAD
                 current_version.tasks.append(DownloadFile(self.token,
                                                         model_file['name'],
                                                         version_output_path,
@@ -118,6 +123,15 @@ class Processor:
                                                         model_file['sizeKB'],
                                                         retry_delay=self.retry_delay,
                                                         skip_existing_verification=self.skip_existing_verification))
+=======
+
+                model_hash = ''
+
+                if 'hashes' in model_file and 'SHA256' in model_file['hashes']:
+                    model_hash = model_file['hashes']['SHA256']
+                
+                current_version.tasks.append(Download(model_file['name'], version_output_path, model_file['downloadUrl'], model_hash, model_file['sizeKB']))
+>>>>>>> e313b1a6d564d204ffe15b8cc18578614419a53c
 
             for idx, model_image in enumerate(version['images']):
                 file_extension = Tools.get_file_extension_regex(model_image['url'])
