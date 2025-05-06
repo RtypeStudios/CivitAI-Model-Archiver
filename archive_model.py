@@ -20,12 +20,13 @@ if __name__ == "__main__":
     parser.add_argument("--usernames", nargs='+', type=str, help="Enter one or more usernames you want to download from.")
     parser.add_argument("--models", nargs='+', type=str, help="Enter one or more models you want to download.")
     parser.add_argument("--retry_delay", type=int, default=10, help="Retry delay in seconds.")
-    parser.add_argument("--max_tries", type=int, default=3, help="Maximum number of retries.")
+    parser.add_argument("--max_tries", type=int, default=5, help="Maximum number of retries.")
     parser.add_argument("--max_threads", type=int, default=5, help="Maximum number of concurrent threads. Too many produces API Failure.")
     parser.add_argument("--token", type=str, default=None, help="API Token for Civitai.")
     parser.add_argument("--output_dir", type=str, default='model_archives', help="The place to output the downloads, defaults to 'model_archives'.")
-    parser.add_argument("--skip_existing_verification", action='store_true', default=False, help="Verifiy already downloaded files that have a hash value.")
     parser.add_argument("--only_base_models", nargs='+', type=str, help="Filter model version by the base model they are built on (SDXL, SD 1.5, Pony, Flux, ETC) see readme for list.")
+    parser.add_argument("--skip_existing_verification", action='store_true', default=False, help="Verifiy already downloaded files that have a hash value.")
+    parser.add_argument("--skip_compress_models", action='store_true', default=False, help="Do not compress models after download.")
     args = parser.parse_args()
 
     # Validate input arguments.
@@ -37,34 +38,26 @@ if __name__ == "__main__":
         print("Please provide at least one username or model id.")
         sys.exit(1)
 
+
+    # Build Extracotr.
+    extractor = MetadataExtractor(args.token)
+
     # Build processor.
     processor = Processor(args.output_dir,
                           args.token,
                           args.max_tries,
                           args.retry_delay,
                           args.max_threads,
-                          args.skip_existing_verification,
                           args.only_base_models,
-                          MetadataExtractor(args.token))
+                          args.skip_existing_verification,
+                          args.skip_compress_models)
 
-    processor.build_tasks()
 
+    # Extract models from CivitAI.
+    models = extractor.extract(usernames=args.usernames, model_ids=args.models)
 
-    exit()
-
-    # # Process provided users.
-    # if args.usernames is not None:
-    #     for u in args.usernames:
-    #         print(f"Processing user: {u}")
-    #         processor.archive_user(u)
-
-    # # Process provided model ids.
-    # if args.models is not None:
-    #     for mid in args.models:
-    #         print(f"Processing model with id: {mid}")
-    #         processor.archive_model(mid)
-
-    processor.summerise()
+    # Show Summary of work
+    processor.summerise(models)
 
     while True:
         proceed = input("Do you want to continue? (y/n): ")
@@ -75,4 +68,5 @@ if __name__ == "__main__":
             print("Continuing...")
             break
 
-    processor.do_work()
+    tasks = processor.build_tasks(models)
+    processor.do_work(tasks)

@@ -1,6 +1,7 @@
 '''
 Module for managing model versions
 '''
+import os
 from models.asset import Asset
 from models.file import File
 
@@ -16,7 +17,7 @@ class Version:
         self.model = model
         self.id = version.get('id', '0')
         self.name = version.get('name', 'Unknown')
-        self.base_model = version.get('baseModel', '')
+        self.base_model = version.get('baseModel', 'None')
         self.created_at = version.get('createdAt', '')
         self.published_at = version.get('publishedAt', '')
         self.status = version.get('status', '')
@@ -25,7 +26,7 @@ class Version:
         self.covered = version.get('covered', '')
         self.trained_words = version.get('trainedWords', [])
 
-        self.tasks = []
+        self.output_path = os.path.join(model.output_path, f'{version["name"]} ({self.base_model})')
 
         self.files = []
         for files in version['files']:
@@ -34,3 +35,5 @@ class Version:
         self.assets = []
         for asset in version['images']:
             self.assets.append(Asset(self, asset))
+
+        

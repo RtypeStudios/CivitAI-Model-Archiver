@@ -8,9 +8,10 @@ class WriteMetadata(Task):
     '''
     Write metadata to a JSON file.
     '''
-    def __init__(self, file_name:str, output_path:str, metadata:str):
-        super().__init__(f'Write Metadata: \"{file_name}\" to: \"{output_path}\"', output_path, file_name)
+    def __init__(self, model_id:str, output_path:str, metadata:str):
+        super().__init__(f'Write Metadata: \"{model_id}.json\" to: \"{output_path}\"', output_path, model_id)
         self.metadata = metadata
+        self.file_name = f'{model_id}.json'
 
     def run(self):
         '''

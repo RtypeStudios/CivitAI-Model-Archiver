@@ -1,3 +1,4 @@
 requests==2.32.3
 tqdm>=4.66.5
 lxml==5.4.0
+py7zr==0.22.0

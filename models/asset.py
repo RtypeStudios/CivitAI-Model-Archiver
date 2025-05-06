@@ -1,6 +1,7 @@
 '''
 Asset class, representing uploaded files.
 '''
+import os
 from pathlib import Path
 
 class Asset:
@@ -21,8 +22,10 @@ class Asset:
             path = Path(self.url)
             self.id = path.stem
             self.extension = path.suffix
-            self.filename = path.name
+            self.name = path.name
         else:
             self.id = ''
             self.extension = ''
-            self.filename = ''
+            self.name = ''
+
+        self.output_path = self.version.output_path

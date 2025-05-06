@@ -2,17 +2,19 @@ import hashlib
 import os
 import time
 
+import py7zr
 import requests
 from tqdm import tqdm
 import urllib3
-from exceptions.failed_hash_check_exception import FailedHashCheckException
+
+from common.exceptions.failed_hash_check_exception import FailedHashCheckException
 from tasks.task import Task
 
 class DownloadFile(Task):
     '''
     Download a file from a given URL and save it to the specified output path.
     '''
-    def __init__(self, token:str, file_name:str, output_path:str, url:str, sha256_hash='', file_size=0, retry_delay=10, skip_existing_verification=False):
+    def __init__(self, token:str, file_name:str, output_path:str, url:str, sha256_hash='', file_size=0, retry_delay=10, skip_existing_verification=False, compress=False):
         super().__init__(f'Download File: \"{file_name}\" to: \"{output_path}\"', output_path, file_name)
 
         self.token = token
@@ -22,6 +24,7 @@ class DownloadFile(Task):
         self.retry_delay = retry_delay
         self.skip_existing_verification = skip_existing_verification
         self.output_path_and_filename = os.path.join(self.output_path, self.file_name)
+        self.compress = compress
 
     def run(self):
         '''
@@ -35,6 +38,7 @@ class DownloadFile(Task):
         '''
         Download a file or image from the provided URL.
         '''
+
         progress_bar = None
 
         try:
@@ -118,6 +122,15 @@ class DownloadFile(Task):
                 if self.verify_hash(output_path, sha256_hash) is False:
                     raise FailedHashCheckException("File failed hash check after download")
 
+            if self.compress:
+                print('Compressing file:', output_path)
+                my_filters = [{'id': py7zr.FILTER_LZMA2, 'preset': 8}] #{'id': py7zr.FILTER_X86}, 
+                with py7zr.SevenZipFile(f'{output_path}.7z', 'w', filters=my_filters) as z:
+                    z.write(output_path)
+
+                os.remove(output_path)
+
+
             return True
 
         except (FailedHashCheckException) as e:
@@ -149,7 +162,6 @@ class DownloadFile(Task):
         '''
         sha256 = hashlib.sha256()
         filesize = os.path.getsize(file_path)
-
         progress_bar = tqdm(desc="Verifying Download", total=filesize, unit='B', unit_scale=True, leave=False, colour='blue')
 
         with open(file_path, "rb") as f:

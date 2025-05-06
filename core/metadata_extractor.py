@@ -19,42 +19,35 @@ class MetadataExtractor:
         self.retry_delay = 20
 
 
-
     # ------------------------------------
     # Main Worker.
     # ------------------------------------
 
-    def extract(self, usernames:list=None, model_ids:list=None):
+    def extract(self, usernames:list=None, model_ids:list=None) -> dict[str, Model]:
         '''
         Extract all models for a given user or model ID.
         '''
 
-        models = []
+        result = {}
 
         if usernames is not None:
             for u in usernames:
                 user_models = self.__extract_user(u)
                 for m in user_models:
-                    models.append(m)
+                    if m.id not in result:
+                        result[m.id] = m
         
         if model_ids is not None:
             for m in model_ids:
-                models.append(self.__extract_model(m))
-
-        result = {}
-
-        for model in models:
-            if model.id not in result:
-                result[model.id] = []
-            result[model.id].append(model)
-
-        print(json.dumps(result, default=lambda o: o.__dict__, indent=4))
+                if m not in result:
+                    result[m] = self.__extract_model(m)
 
         return result
 
+
     def __extract_user(self, username:str):
         '''
-        Exctract all models for a given user.
+        Extract all models for a given user.
         '''
         models = []
 

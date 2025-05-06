@@ -159,7 +159,7 @@ Some examples:
 
 --max_tries
 ```
-+ default=3,
++ default=5,
 + "Maximum number of retries."
 ```
 
@@ -179,6 +179,12 @@ Some examples:
 ```
  + default=false, 
  + "Skip SHA256 verification of existing downloads."
+```
+
+--skip_compress_models
+```
+ + default=false, 
+ + "Skip compressing model files with 7 Zip."
 ```
 
 

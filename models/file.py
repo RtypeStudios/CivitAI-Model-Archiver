@@ -2,6 +2,7 @@
 File class representing a model.
 '''
 
+import os
 from common.tools import Tools
 
 
@@ -18,9 +19,9 @@ class File:
 
         self.id             = file.get('id', '0')
         self.size_kb        = file.get('sizeKb', 0)
-        self.name           = Tools.sanitize_name(file.get('name', 'Unknown'))
+        self.name           = file.get('name', '')
         self.mode_type      = file.get('type', 'Unknown')
-        self.download_url   = file.get('downloadUrl')
+        self.url            = file.get('downloadUrl')
         self.primary        = file.get('primary')
 
         self.sha_256_hash = ''
@@ -28,3 +29,5 @@ class File:
         if 'hashes' in file:
             if 'SHA256' in file['hashes']:
                 self.sha_256_hash = file['hashes']['SHA256']
+
+        self.output_path = self.version.output_path

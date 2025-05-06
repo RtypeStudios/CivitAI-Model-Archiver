@@ -20,15 +20,14 @@ class Model:
         self.name           = Tools.sanitize_name(model.get('name', 'Unknown'))
         self.type           = Tools.sanitize_name(model.get('type', 'Unknown'))
         self.description    = model.get('description', '')
-
-        self.tasks = []
+        self.metadata       = model
 
         if 'creator' in model and 'username' in model['creator']:
             self.username = model['creator']['username']
         else:
             self.username = 'Unknown'
 
-        self.ouput_path = os.path.join(self.username, f'{self.name} ({self.type})')
+        self.output_path = os.path.join(self.username, f'{self.name} ({self.type})')
 
         self.versions = []
 
