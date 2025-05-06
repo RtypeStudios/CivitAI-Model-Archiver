@@ -13,8 +13,8 @@ class WriteDescription(Task):
         '''
         Initialize the task with the output path and description.
         '''
-        file_name = 'description.html'
-        super().__init__(f'Write Description: \"{file_name}\" to: \"{output_path}\"', output_path, file_name)
+        self.file_name = 'description.html'
+        super().__init__(f'Write Description: \"{self.file_name}\" to: \"{output_path}\"', output_path, self.file_name)
         self.description = description
 
 

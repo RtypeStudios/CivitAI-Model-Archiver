@@ -56,8 +56,11 @@ if __name__ == "__main__":
     # Extract models from CivitAI.
     models = extractor.extract(usernames=args.usernames, model_ids=args.models)
 
-    # Show Summary of work
-    processor.summerise(models)
+    # Generate work list.
+    tasks = processor.build_tasks(models)
+
+    # Summerise the work list.
+    processor.summerise(tasks)
 
     while True:
         proceed = input("Do you want to continue? (y/n): ")
@@ -68,5 +71,5 @@ if __name__ == "__main__":
             print("Continuing...")
             break
 
-    tasks = processor.build_tasks(models)
+    
     processor.do_work(tasks)

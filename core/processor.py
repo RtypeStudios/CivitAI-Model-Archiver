@@ -42,9 +42,10 @@ class Processor:
         self.logger.info("Processor initialized with output_dir: %s, max_tries: %d, retry_delay: %d, max_threads: %d, Skip existing verification: %s", self.output_dir, self.max_tries, self.retry_delay, self.max_threads, self.skip_existing_verification)
 
         if self.only_base_models is not None:
-            self.logger.info("Only fetching models versions based on %s.", "".join(self.only_base_models))
+            self.logger.info("Only fetching models versions based on: %s.n" \
+            "", "".join(self.only_base_models))
 
- 
+
     def build_tasks(self, models:dict[str, Model]) -> list[Task]:
         '''
         Do the extraction of model data.
@@ -58,6 +59,11 @@ class Processor:
             tasks.append(WriteDescription(os.path.join(self.output_dir, model.output_path), model.description))
 
             for version in model.versions:
+
+                if self.only_base_models is not None and version.base_model.upper() not in self.only_base_models:
+                    self.logger.warning("Skipping condition: %s, not in wanted base model list", version.name)
+                    continue
+
                 tasks.append(WriteTrainedWords(os.path.join(self.output_dir, version.output_path), version.trained_words))
 
                 for model in version.files:
@@ -84,34 +90,20 @@ class Processor:
         return tasks
 
 
-    def summerise(self, models:dict[str, Model]) -> None:
+    def summerise(self, tasks:list[Task]) -> None:
         '''
         Write the summary information for the user.
         '''
         summary = os.linesep
+        summary += os.linesep
         summary += 'Below are a list of the requested tasks (Note: anything already downloaded will be skipped).'
         summary += os.linesep
 
-        # for task in tasks:
-        #     summary += f"Task Type: {task.__name__} " + os.linesep
-
-        for _, m in models.items():
-            summary += f"\tUser: {m.username}, Model: {m.name} ({m.id}) type: {m.type})" + os.linesep
-            summary += os.linesep
-            for v in m.versions:
-                summary += f"\t\tVersion: {v.id} ({v.name}) based on {v.base_model}" + os.linesep
-                summary += "\t\tItems:" + os.linesep
-
-                for t in v.files:
-                    summary += f"\t\t\t\t{t.name}" + os.linesep
-
-                for t in v.assets:
-                    summary += f"\t\t\t\t{t.name}" + os.linesep
-
-                summary += os.linesep
-            summary += os.linesep
+        for task in tasks:
+            summary += f"\t{task.name}" + os.linesep
 
         self.logger.info(summary)
+
 
 
     def do_work(self, tasks:list[Task]) -> None:
