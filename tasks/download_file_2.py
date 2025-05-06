@@ -107,6 +107,14 @@ class DownloadFile2(Task):
                 # Download the file with progress bar
                 with requests.get(url, headers={ 'Authorization': f'Bearer {self.token}', **resume_header }, stream=True, timeout=2000) as response:
 
+                    if response.status_code == 401:
+                        self.logger.debug("Unauthorized for url (Model Removed?): %s", url)
+                        return False
+
+                    if response.status_code == 404:
+                        self.logger.debug("File not found: %s", url)
+                        return False
+
                     response.raise_for_status()
 
                     with tqdm(desc=action,
@@ -132,7 +140,7 @@ class DownloadFile2(Task):
                 self.logger.error("Error downloading file: %s", e)
                 time.sleep(self.retry_delay)
 
-        self.logger.error("Failed to download file: %s, hit max retries.", e)
+        self.logger.error("Failed to download file: %s, hit max retries.", url)
 
 
     def verify(self, output_path, expected_hash):
