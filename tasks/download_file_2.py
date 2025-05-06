@@ -109,11 +109,15 @@ class DownloadFile2(Task):
 
                     if response.status_code == 401:
                         self.logger.debug("Unauthorized for url (Model Removed?): %s", url)
-                        return False
+                        return
 
                     if response.status_code == 404:
                         self.logger.debug("File not found: %s", url)
-                        return False
+                        return
+                    
+                    if response.status_code == 416:
+                        self.logger.debug("Could not resume download, resume was: (%s/%s) %s", resume_header['Range'], int(response.headers.get('Content-Length', 0)), temp_output_path)
+                        return
 
                     response.raise_for_status()
 
