@@ -20,8 +20,6 @@ class TaskRunner:
         '''
         self.logger.info("Starting work.")
 
-        random.shuffle(tasks)
-
         with tqdm(total=len(tasks), desc="Procesing Tasks", unit="task", colour='green') as pbar:
             with ThreadPoolExecutor(max_workers=self.max_threads) as executor:
                 futures = []

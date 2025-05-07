@@ -3,7 +3,7 @@ import os
 
 from common.tools import Tools
 from models.model import Model
-from tasks.download_file_2 import DownloadFile2
+from tasks.download_file import DownloadFile
 from tasks.task import Task
 from tasks.write_description import WriteDescription
 from tasks.write_metadata import WriteMetadata
@@ -49,7 +49,7 @@ class TaskBuilder:
             for version in model.versions:
 
                 if self.only_base_models is not None and version.base_model.upper() not in self.only_base_models:
-                    self.logger.warning("Skipping condition: %s, not in wanted base model list", version.name)
+                    self.logger.warning("Skipping condition: %s, not in wanted base model list", version.base_model)
                     continue
 
                 if not os.path.exists(os.path.join(self.output_dir, version.output_path, 'trained_words.txt')):
@@ -63,7 +63,7 @@ class TaskBuilder:
                         model_path = model_path + '.7z'   
 
                     if not os.path.exists(model_path):
-                        tasks.append(DownloadFile2(self.token,
+                        tasks.append(DownloadFile(self.token,
                                                 model.name,
                                                 os.path.join(self.output_dir, model.output_path),
                                                 model.url,
@@ -77,7 +77,7 @@ class TaskBuilder:
                 for asset in version.assets:
 
                     if not os.path.exists(os.path.join(self.output_dir, asset.output_path, asset.name)):
-                        tasks.append(DownloadFile2(self.token,
+                        tasks.append(DownloadFile(self.token,
                                                 asset.name,
                                                 os.path.join(self.output_dir, asset.output_path),
                                                 asset.url,
