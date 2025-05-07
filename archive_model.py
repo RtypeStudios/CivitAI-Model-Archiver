@@ -3,10 +3,10 @@ import time
 import argparse
 import sys
 
-
-from common.tools import Tools
 from core.metadata_extractor import MetadataExtractor
-from core.processor import Processor
+from core.task_builder import TaskBuilder
+from core.task_runner import TaskRunner
+from core.task_summariser import TaskSummariser
 
 if __name__ == "__main__":
 
@@ -45,8 +45,8 @@ if __name__ == "__main__":
     # Build Extracotr.
     extractor = MetadataExtractor(args.token)
 
-    # Build processor.
-    processor = Processor(args.output_dir,
+    # Task Builder
+    builder = TaskBuilder(args.output_dir,
                           args.token,
                           args.max_tries,
                           args.retry_delay,
@@ -55,15 +55,24 @@ if __name__ == "__main__":
                           args.skip_existing_verification,
                           args.skip_compress_models)
 
+    # Task Summariser
+    task_summariser = TaskSummariser()
+
+    # Task Runner
+    task_runner = TaskRunner()
 
     # Extract models from CivitAI.
     models = extractor.extract(usernames=args.usernames, model_ids=args.models)
 
     # Generate work list.
-    tasks = processor.build_tasks(models)
+    tasks = builder.build_tasks(models)
+
+    if len(tasks) == 0:
+        print("No tasks to do, exiting.")
+        sys.exit(1)
 
     # Summerise the work list.
-    processor.summerise(tasks)
+    task_summariser.summerise(tasks)
 
     while True:
         proceed = input("Do you want to continue? (y/n): ")
@@ -74,5 +83,4 @@ if __name__ == "__main__":
             print("Continuing...")
             break
 
-    
-    processor.do_work(tasks)
+    task_runner.do_work(tasks)

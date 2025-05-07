@@ -1,5 +1,6 @@
 import hashlib
 import os
+import sys
 import time
 
 import py7zr
@@ -153,6 +154,11 @@ class DownloadFile2(Task):
             except (requests.exceptions.RequestException, requests.HTTPError, requests.ConnectionError, requests.Timeout) as e:
                 self.logger.error("XXXX Error downloading file: %s", e)
                 time.sleep(self.retry_delay)
+
+            except (OSError) as e:
+                self.logger.error("Disk Full", e)
+                sys.exit(1)
+
 
         self.logger.error("Failed to download file: %s, hit max retries.", url)
 
