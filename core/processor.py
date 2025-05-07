@@ -43,8 +43,8 @@ class Processor:
         self.logger.info("Processor initialized with output_dir: %s, max_tries: %d, retry_delay: %d, max_threads: %d, Skip existing verification: %s", self.output_dir, self.max_tries, self.retry_delay, self.max_threads, self.skip_existing_verification)
 
         if self.only_base_models is not None:
-            self.logger.info("Only fetching models versions based on: %s.n" \
-            "", "".join(self.only_base_models))
+            self.logger.info("Only fetching models versions based on: %s." \
+            "", " ".join(self.only_base_models))
 
 
     def build_tasks(self, models:dict[str, Model]) -> list[Task]:

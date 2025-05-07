@@ -34,6 +34,10 @@ class DownloadFile2(Task):
         compressed_output_path  = f'{self.output_path_and_filename}.7z'
         downloaded_output_path  = self.output_path_and_filename
 
+        if os.path.exists(downloaded_output_path) and os.path.exists(compressed_output_path):
+            self.logger.debug('Downloaded file and compressed file both exist, assuming application interupted between download and compression phases, removing compressed: %s %s', downloaded_output_path, compressed_output_path)
+            os.remove(compressed_output_path)
+
         # Check the file exists compressed
         if self.compress and os.path.exists(compressed_output_path):
             self.logger.debug('Compressed File already exists: %s', compressed_output_path)

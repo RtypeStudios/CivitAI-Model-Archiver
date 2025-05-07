@@ -18,7 +18,7 @@ class Version:
         self.model = model
         self.id = version.get('id', '0')
         self.name = Tools.sanitize_name(version.get('name', 'Unknown'))
-        self.base_model = version.get('baseModel', 'None')
+        self.base_model = Tools.sanitize_name(version.get('baseModel', 'None'))
         self.created_at = version.get('createdAt', '')
         self.published_at = version.get('publishedAt', '')
         self.status = version.get('status', '')
@@ -27,7 +27,7 @@ class Version:
         self.covered = version.get('covered', '')
         self.trained_words = version.get('trainedWords', [])
 
-        self.output_path = os.path.join(model.output_path, f'{version["name"]} ({self.base_model})')
+        self.output_path = os.path.join(model.output_path, f'{self.name} ({self.base_model})')
 
         self.files = []
         for files in version['files']:
