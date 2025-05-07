@@ -1,6 +1,7 @@
 import logging
 import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
+import random
 from tqdm import tqdm
 
 from common.tools import Tools
@@ -115,6 +116,8 @@ class Processor:
         self.logger.info("Max threads: %s", self.max_threads)
         self.logger.info("Max tries: %s", self.max_tries)
         self.logger.info("Retry delay: %s seconds", self.retry_delay)
+
+        random.shuffle(tasks)
 
         with tqdm(total=len(tasks), desc="Procesing Tasks", unit="task", colour='green') as pbar:
             with ThreadPoolExecutor(max_workers=self.max_threads) as executor:

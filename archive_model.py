@@ -3,14 +3,17 @@ import time
 import argparse
 import sys
 
+
+from common.tools import Tools
 from core.metadata_extractor import MetadataExtractor
 from core.processor import Processor
 
 if __name__ == "__main__":
 
     # Set up logging to both file and console.
-    file_logger = logging.FileHandler(f"log-{time.strftime('%Y%m%d%H%M%S')}.log")
+    file_logger = logging.FileHandler(f"log-{time.strftime('%Y%m%d%H%M%S')}.log", encoding='utf-8')
     file_logger.setLevel(logging.DEBUG)
+    
     stream_logger = logging.StreamHandler()
     stream_logger.setLevel(logging.INFO)
     logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s',handlers=[file_logger, stream_logger])

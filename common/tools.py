@@ -1,6 +1,7 @@
 import json
 import os
 import re
+import string
 import sys
 import time
 import requests
@@ -69,33 +70,19 @@ class Tools:
 
 
     @staticmethod
-    def sanitize_name(name, max_length=200):
+    def sanitize_name(value, max_length=200):
         """Sanitize a name for use as a file or folder name."""
 
-        # Remove problematic characters and control characters
-        name = re.sub(r'[<>:"/\\|?*\x00-\x1f\x7f-\x9f]', '_', name)
+        printable = set(string.printable)
+        value = ''.join(filter(lambda x: x in printable, value))
 
         # Reduce multiple underscores to single and trim leading/trailing underscores and dots
-        name = re.sub(r'__+', '_', name).strip('_.')
+        value = re.sub(r'__+', '_', value).strip('_.')
 
-        return name.strip()[:max_length]  # Limit length to max_length
+        value = re.sub(r"\s+", " ", value)
 
-    # @staticmethod
-    # def clean(name):
-    #     """
-    #     Clean a string to make it safe for use in filesystems.
-    #     """
-    #     # Normalize Unicode characters to their closest ASCII equivalent
-    #     name = unicodedata.normalize('NFKD', name).encode('ascii', 'ignore').decode('ascii')
+        # remove trailing dashes
+        if value.endswith('-'):
+            value = value[:-1]
 
-    #     # Remove invalid filesystem characters
-    #     name = re.sub(r'[<>:"/\\|?*\x00-\x1f]', '_', name)
-
-    #     # Remove leading/trailing whitespace and dots
-    #     name = name.strip().strip('.')
-
-    #     # Replace multiple consecutive underscores with a single underscore
-    #     name = re.sub(r'__+', '_', name)
-
-    #     return name
-    
+        return value.strip()[:max_length]

@@ -37,7 +37,7 @@ class DownloadFile2(Task):
         # Check the file exists compressed
         if self.compress and os.path.exists(compressed_output_path):
             self.logger.debug('Compressed File already exists: %s', compressed_output_path)
-            return True
+            return
 
         # Check the file exists uncompressed
         elif os.path.exists(downloaded_output_path):
@@ -60,26 +60,32 @@ class DownloadFile2(Task):
                 self.compress_and_remove(downloaded_output_path, compressed_output_path)
 
             # All good return.
-            return True
+            return
             
         else:
 
             # Download the file
             self.download(self.url, temp_output_path, downloaded_output_path)
 
-            # Verify the file
-            if self.sha256_hash is not None and self.sha256_hash != '':
-                if self.verify(downloaded_output_path, self.sha256_hash) is not True:
-                    # Remove the existing file and recurse.
-                    os.rename(downloaded_output_path, downloaded_output_path + f'.failed_hash_{time.strftime('%Y%m%d%H%M%S')}')
-                    return self.run()
+            # Check this file exists
+            if os.path.exists(downloaded_output_path):
 
-            # compression enabled?
-            if self.compress:
-                # compress the file
-                self.compress_and_remove(downloaded_output_path, compressed_output_path)
+                # Verify the file
+                if self.sha256_hash is not None and self.sha256_hash != '':
+                    if self.verify(downloaded_output_path, self.sha256_hash) is not True:
+                        # Remove the existing file and recurse.
+                        os.rename(downloaded_output_path, downloaded_output_path + f'.failed_hash_{time.strftime('%Y%m%d%H%M%S')}')
+                        return self.run()
 
-            return True
+                # compression enabled?
+                if self.compress:
+                    # compress the file
+                    self.compress_and_remove(downloaded_output_path, compressed_output_path)
+
+            else:
+                self.logger.error("Downloaded file not found? %s", downloaded_output_path)
+
+            return
 
 
     def download(self, url, temp_output_path, output_path):
@@ -105,7 +111,7 @@ class DownloadFile2(Task):
                     color = 'YELLOW'
 
                 # Download the file with progress bar
-                with requests.get(url, headers={ 'Authorization': f'Bearer {self.token}', **resume_header }, stream=True, timeout=2000) as response:
+                with requests.get(url, headers={ 'Authorization': f'Bearer {self.token}', **resume_header }, stream=True, timeout=2000, allow_redirects=True) as response:
 
                     if response.status_code == 401:
                         self.logger.debug("Unauthorized for url (Model Removed?): %s", url)
@@ -114,9 +120,9 @@ class DownloadFile2(Task):
                     if response.status_code == 404:
                         self.logger.debug("File not found: %s", url)
                         return
-                    
+
                     if response.status_code == 416:
-                        self.logger.debug("Could not resume download, resume was: (%s/%s) %s", resume_header['Range'], int(response.headers.get('Content-Length', 0)), temp_output_path)
+                        self.logger.debug("Could not resume download, resume was: (%s/%s) %s -> %s", resume_header['Range'], int(response.headers.get('Content-Length', 0)), url, temp_output_path)
                         return
 
                     response.raise_for_status()
@@ -141,7 +147,7 @@ class DownloadFile2(Task):
                 return
 
             except (requests.exceptions.RequestException, requests.HTTPError, requests.ConnectionError, requests.Timeout) as e:
-                self.logger.error("Error downloading file: %s", e)
+                self.logger.error("XXXX Error downloading file: %s", e)
                 time.sleep(self.retry_delay)
 
         self.logger.error("Failed to download file: %s, hit max retries.", url)

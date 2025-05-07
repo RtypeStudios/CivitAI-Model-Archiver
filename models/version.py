@@ -2,6 +2,7 @@
 Module for managing model versions
 '''
 import os
+from common.tools import Tools
 from models.asset import Asset
 from models.file import File
 
@@ -16,7 +17,7 @@ class Version:
         '''
         self.model = model
         self.id = version.get('id', '0')
-        self.name = version.get('name', 'Unknown')
+        self.name = Tools.sanitize_name(version.get('name', 'Unknown'))
         self.base_model = version.get('baseModel', 'None')
         self.created_at = version.get('createdAt', '')
         self.published_at = version.get('publishedAt', '')
