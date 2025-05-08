@@ -1,11 +1,6 @@
-'''
-Module for defining the Model class.
-'''
-
 import os
 from common.tools import Tools
 from models.version import Version
-
 
 class Model:
     '''

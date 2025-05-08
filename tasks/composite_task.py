@@ -1,7 +1,4 @@
-import os
-from pathlib import Path
-import py7zr
-from tasks.task import BaseTask
+from common.base_task import BaseTask
 
 class CompositeTask(BaseTask):
 

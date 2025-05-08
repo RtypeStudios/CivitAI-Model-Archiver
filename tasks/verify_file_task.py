@@ -4,7 +4,7 @@ import time
 
 from tqdm import tqdm
 
-from tasks.task import BaseTask
+from common.base_task import BaseTask
 
 class VerifyFileTask(BaseTask):
     def __init__(self, input_path_and_file_name:str, output_path_and_file_name:str, expected_sha256_hash:str):

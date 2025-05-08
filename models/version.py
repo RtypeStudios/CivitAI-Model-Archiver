@@ -1,6 +1,3 @@
-'''
-Module for managing model versions
-'''
 import os
 from common.tools import Tools
 from models.asset import Asset

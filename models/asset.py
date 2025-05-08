@@ -1,7 +1,6 @@
 '''
 Asset class, representing uploaded files.
 '''
-import os
 from pathlib import Path
 
 class Asset:

@@ -1,11 +1,3 @@
-'''
-File class representing a model.
-'''
-
-import os
-from common.tools import Tools
-
-
 class File:
     '''
     Class representing a machine learning model.

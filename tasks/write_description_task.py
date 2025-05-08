@@ -2,7 +2,7 @@ import os
 from lxml import etree, html
 
 from common.tools import Tools
-from tasks.task import BaseTask
+from common.base_task import BaseTask
 
 class WriteDescriptionTask(BaseTask):
     '''

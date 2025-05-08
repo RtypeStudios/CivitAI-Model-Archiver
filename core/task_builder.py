@@ -4,8 +4,8 @@ import os
 from common.tools import Tools
 from models.model import Model
 
+from common.base_task import BaseTask
 from tasks.composite_task import CompositeTask
-from tasks.task import BaseTask
 from tasks.verify_file_task import VerifyFileTask
 from tasks.compress_file_task import CompressFileTask
 from tasks.download_file_task import DownloadFileTask

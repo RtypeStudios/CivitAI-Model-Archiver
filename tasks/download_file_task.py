@@ -4,7 +4,7 @@ import time
 import requests
 from tqdm import tqdm
 
-from tasks.task import BaseTask
+from common.base_task import BaseTask
 
 class DownloadFileTask(BaseTask):
     '''

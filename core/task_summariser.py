@@ -1,7 +1,7 @@
 import logging
 import os
 from tasks.composite_task import CompositeTask
-from tasks.task import BaseTask
+from common.base_task import BaseTask
 
 class TaskSummariser:
 

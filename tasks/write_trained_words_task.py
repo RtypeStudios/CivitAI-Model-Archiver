@@ -1,5 +1,5 @@
 from common.tools import Tools
-from tasks.task import BaseTask
+from common.base_task import BaseTask
 
 class WriteTrainedWordsTask(BaseTask):
     '''

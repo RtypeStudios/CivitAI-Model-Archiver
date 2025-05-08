@@ -4,7 +4,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import random
 from tqdm import tqdm
 
-from tasks.task import BaseTask
+from common.base_task import BaseTask
 
 class TaskRunner:
 
