@@ -4,7 +4,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import random
 from tqdm import tqdm
 
-from tasks.task import Task
+from tasks.task import BaseTask
 
 class TaskRunner:
 
@@ -14,7 +14,7 @@ class TaskRunner:
         self.max_threads = max_threads
 
 
-    def do_work(self, tasks:list[Task]) -> None:
+    def do_work(self, tasks:list[BaseTask]) -> None:
         '''
         Actually start doing the work.
         '''

@@ -2,9 +2,9 @@ import json
 import os
 
 from common.tools import Tools
-from tasks.task import Task
+from tasks.task import BaseTask
 
-class WriteMetadata(Task):
+class WriteMetadataTask(BaseTask):
     '''
     Write metadata to a JSON file.
     '''

@@ -3,11 +3,15 @@ import os
 
 from common.tools import Tools
 from models.model import Model
-from tasks.download_file import DownloadFile
-from tasks.task import Task
-from tasks.write_description import WriteDescription
-from tasks.write_metadata import WriteMetadata
-from tasks.write_trained_words import WriteTrainedWords
+
+from tasks.composite_task import CompositeTask
+from tasks.task import BaseTask
+from tasks.verify_file_task import VerifyFileTask
+from tasks.compress_file_task import CompressFileTask
+from tasks.download_file_task import DownloadFileTask
+from tasks.write_description_task import WriteDescriptionTask
+from tasks.write_metadata_task import WriteMetadataTask
+from tasks.write_trained_words_task import WriteTrainedWordsTask
 
 class TaskBuilder:
 
@@ -32,7 +36,7 @@ class TaskBuilder:
             self.only_base_models = None
 
 
-    def build_tasks(self, models:dict[str, Model]) -> list[Task]:
+    def build_tasks(self, models:dict[str, Model]) -> list[BaseTask]:
         '''
         Do the extraction of model data.
         '''
@@ -41,10 +45,10 @@ class TaskBuilder:
         for model_id, file in models.items():
 
             if not os.path.exists(os.path.join(self.output_dir, file.output_path, f'{model_id}.json')):
-                tasks.append(WriteMetadata(model_id, os.path.join(self.output_dir, file.output_path), file.metadata))
+                tasks.append(WriteMetadataTask(model_id, os.path.join(self.output_dir, file.output_path), file.metadata))
 
             if not os.path.exists(os.path.join(self.output_dir, file.output_path, 'description.html')):
-                tasks.append(WriteDescription(os.path.join(self.output_dir, file.output_path), file.description))
+                tasks.append(WriteDescriptionTask(os.path.join(self.output_dir, file.output_path), file.description))
 
             for version in file.versions:
 
@@ -52,49 +56,45 @@ class TaskBuilder:
                     self.logger.warning("Skipping condition: %s, not in wanted base model list", version.base_model)
                     continue
 
-                if not os.path.exists(os.path.join(self.output_dir, version.output_path, 'trained_words.txt')):
-                    tasks.append(WriteTrainedWords(os.path.join(self.output_dir, version.output_path), version.trained_words))
+                trained_words_path = os.path.join(self.output_dir, version.output_path, 'trained_words.txt')
+                if not os.path.exists(trained_words_path):
+                    tasks.append(WriteTrainedWordsTask(trained_words_path, version.trained_words))
 
                 for file in version.files:
+                    compressed_output_path  = os.path.join(self.output_dir, file.output_path, f'{file.name}.7z') 
+                    downloaded_output_path  = os.path.join(self.output_dir, file.output_path, file.name)
+                    need_verify_output_path = os.path.join(self.output_dir, file.output_path, f'{file.name}.verify')
+                    temp_output_path        = os.path.join(self.output_dir, file.output_path, f'{file.name}.tmp')
+                    
+                    # If compressed version exists, job done!
+                    if os.path.exists(compressed_output_path):
+                        continue
 
-                    temp_output_path        = os.path.join(self.output_dir, file.output_path, f'{file.name}.tmp') 
-                    # compressed_output_path  = os.path.join(self.output_dir, file.output_path, f'{file.name}.7z') 
-                    # downloaded_output_path  = os.path.join(self.output_dir, file.output_path, file.name)
+                    # If file excists but isn't compressed, verify and compress the file.
+                    elif os.path.exists(downloaded_output_path):
+                        tasks.append(CompressFileTask(downloaded_output_path, compressed_output_path))
 
-                    # # If compressed version exists, job done!
-                    # if os.path.exists(compressed_output_path):
-                    #     continue
+                    # File needs to be verified.
+                    elif os.path.exists(need_verify_output_path):
+                        tasks.append(CompositeTask([
+                            VerifyFileTask(need_verify_output_path, downloaded_output_path, file.sha_256_hash),
+                            CompressFileTask(downloaded_output_path, compressed_output_path)
+                        ]))
 
-                    # # If file excists but isn't compressed, verify and compress the file.
-                    # elif os.path.exists(downloaded_output_path):
-                    #     continue
-
-                    # # If partial file is present or file doesn't exists, download or resume the file
-                    # elif os.path.exists(temp_output_path) or not os.path.exists(downloaded_output_path):
-                    tasks.append(DownloadFile(self.token,
-                                                file.name,
-                                                os.path.join(self.output_dir, file.output_path),
-                                                file.url,
-                                                os.path.exists(temp_output_path),
-                                                self.retry_delay,
-                                                self.max_tries,
-                                                file.sha_256_hash,
-                                                file.size_kb,
-                                                skip_existing_verification=self.skip_existing_verification,
-                                                compress=not self.skip_compress_models))
-
-
+                    # If partial file is present or file doesn't exists, download or resume the file
+                    else:
+                        tasks.append(CompositeTask([
+                            DownloadFileTask(file.url, temp_output_path, need_verify_output_path, self.token, self.retry_delay, self.max_tries, file.size_kb),
+                            VerifyFileTask(need_verify_output_path, downloaded_output_path, file.sha_256_hash),
+                            CompressFileTask(downloaded_output_path, compressed_output_path)
+                        ]))
 
                 for asset in version.assets:
+                    downloaded_output_path = os.path.join(self.output_dir, asset.output_path, asset.name)
+                    temp_output_path       = os.path.join(self.output_dir, asset.output_path, f'{asset.name}.tmp')
 
-                    if not os.path.exists(os.path.join(self.output_dir, asset.output_path, asset.name)):
-                        tasks.append(DownloadFile(self.token,
-                                                asset.name,
-                                                os.path.join(self.output_dir, asset.output_path),
-                                                asset.url,
-                                                False,
-                                                self.retry_delay,
-                                                self.max_tries,
-                                                skip_existing_verification=self.skip_existing_verification))
+                    if not os.path.exists(downloaded_output_path):
+                        tasks.append(DownloadFileTask(asset.url, temp_output_path, downloaded_output_path, self.token, self.retry_delay, self.max_tries))
+
 
         return tasks

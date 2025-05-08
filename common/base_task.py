@@ -1,16 +1,15 @@
 import logging
 
-class Task:
+class BaseTask:
     '''
     Base class for all tasks.
     '''
-    def __init__(self, name:str, output_path:str, file_name:str):
+    def __init__(self, name:str, input_path_and_file_name:str, output_path_and_file_name:str):
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging.DEBUG)
         self.name = name
-        self.type = type
-        self.file_name = file_name
-        self.output_path = output_path
+        self.input_path_and_file_name = input_path_and_file_name
+        self.output_path_and_file_name = output_path_and_file_name
 
     def run(self) -> bool:
         '''

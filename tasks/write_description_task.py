@@ -2,9 +2,9 @@ import os
 from lxml import etree, html
 
 from common.tools import Tools
-from tasks.task import Task
+from tasks.task import BaseTask
 
-class WriteDescription(Task):
+class WriteDescriptionTask(BaseTask):
     '''
     Write a description to an HTML file.
     '''

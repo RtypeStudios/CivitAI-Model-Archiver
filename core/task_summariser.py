@@ -1,6 +1,7 @@
 import logging
 import os
-from tasks.task import Task
+from tasks.composite_task import CompositeTask
+from tasks.task import BaseTask
 
 class TaskSummariser:
 
@@ -11,7 +12,7 @@ class TaskSummariser:
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging.DEBUG)
 
-    def summerise(self, tasks:list[Task]) -> None:
+    def summerise(self, tasks:list[BaseTask]) -> None:
         '''
         Write the summary information for the user.
         '''
@@ -21,6 +22,10 @@ class TaskSummariser:
         summary += os.linesep
 
         for task in tasks:
-            summary += f"\t{task.name}" + os.linesep
+            if isinstance(task, CompositeTask):
+                for subtask in task.tasks:
+                    summary += f"\t\t{subtask.name}" + os.linesep
+            else:
+                summary += f"\t{task.name}" + os.linesep
 
         self.logger.info(summary)
