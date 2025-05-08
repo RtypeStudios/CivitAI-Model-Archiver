@@ -1,18 +1,18 @@
 import logging
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
-import random
 from tqdm import tqdm
 
 from common.base_task import BaseTask
 
 class TaskRunner:
-
+    '''
+    Class to run the tasks in parallel using threads.
+    '''
     def __init__(self, max_threads:int=5):
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging.DEBUG)
         self.max_threads = max_threads
-
 
     def do_work(self, tasks:list[BaseTask]) -> None:
         '''

@@ -5,7 +5,6 @@ from common.tools import Tools
 from models.model import Model
 
 class MetadataExtractor:
-
     '''
     Class to process the model data and download files from CivitAI.
     '''
@@ -17,16 +16,10 @@ class MetadataExtractor:
         self.token = token
         self.retry_delay = 20
 
-
-    # ------------------------------------
-    # Main Worker.
-    # ------------------------------------
-
     def extract(self, usernames:list=None, model_ids:list=None) -> dict[str, Model]:
         '''
         Extract all models for a given user or model ID.
         '''
-
         result = {}
 
         if usernames is not None:
@@ -42,7 +35,6 @@ class MetadataExtractor:
                     result[m] = self.__extract_model(m)
 
         return result
-
 
     def __extract_user(self, username:str):
         '''

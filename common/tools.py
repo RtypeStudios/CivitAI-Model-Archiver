@@ -22,18 +22,6 @@ class Tools:
         return name.rstrip()  # Remove trailing whitespace characters
 
     @staticmethod
-    def get_file_extension_regex(url):
-        '''
-        Extract the file extension from the URL using regex.
-        taken from: https://www.geeksforgeeks.org/get-the-file-extension-from-a-url-in-python/
-        '''
-        match = re.search(r'\.([a-zA-Z0-9]+)$', url)
-        if match:
-            return match.group(1)
-        else:
-            return None
-
-    @staticmethod
     def write_file(file_path, content):
         '''
         Write the content to a file, creating directories as needed.

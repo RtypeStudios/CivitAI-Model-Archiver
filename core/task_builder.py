@@ -14,7 +14,6 @@ from tasks.write_metadata_task import WriteMetadataTask
 from tasks.write_trained_words_task import WriteTrainedWordsTask
 
 class TaskBuilder:
-
     '''
     Class to process the model data and download files from CivitAI.
     '''
@@ -22,7 +21,7 @@ class TaskBuilder:
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging.DEBUG)
 
-        self.output_dir = Tools.sanitize_directory_name(output_dir)
+        self.output_dir = Tools.sanitize_name(output_dir) #Tools.sanitize_directory_name
         self.token = token
         self.max_tries = max_tries
         self.retry_delay = retry_delay
@@ -99,6 +98,5 @@ class TaskBuilder:
                     temp_output_path       = os.path.join(self.output_dir, asset.output_path, f'{asset.name}.tmp')
                     if not os.path.exists(downloaded_output_path):
                         tasks.append(DownloadFileTask(asset.url, temp_output_path, downloaded_output_path, self.token, self.retry_delay, self.max_tries))
-
 
         return tasks

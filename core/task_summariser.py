@@ -4,7 +4,6 @@ from tasks.composite_task import CompositeTask
 from common.base_task import BaseTask
 
 class TaskSummariser:
-
     '''
     Class to process the model data and download files from CivitAI.
     '''
