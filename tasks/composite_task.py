@@ -13,4 +13,7 @@ class CompositeTask(BaseTask):
         Run the composite task.
         '''
         for task in self.tasks:
-            task.run()
+            result = task.run()
+            if result is False:
+                self.logger.error("Task %s failed", task.name)
+                return False
