@@ -21,7 +21,7 @@ class TaskBuilder:
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging.DEBUG)
 
-        self.output_dir = Tools.sanitize_name(output_dir) #Tools.sanitize_directory_name
+        self.output_dir = Tools.sanitize_directory_name(output_dir)
         self.token = token
         self.max_tries = max_tries
         self.retry_delay = retry_delay
