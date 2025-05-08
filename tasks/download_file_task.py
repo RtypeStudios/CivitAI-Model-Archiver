@@ -11,14 +11,13 @@ class DownloadFileTask(BaseTask):
     Download a file from a given URL and save it to the specified output path.
     '''
     def __init__(self, input_path_and_file_name:str, temp_output_path_and_file_name:str, output_path_and_file_name:str, token:str, retry_delay, max_retry, file_size=0):
-        
         self.temp_output_path_and_file_name  = temp_output_path_and_file_name
 
         if os.path.exists(self.temp_output_path_and_file_name):
             super().__init__(f'Resume File: \"{input_path_and_file_name}\" to: \"{output_path_and_file_name}\"', input_path_and_file_name, output_path_and_file_name)
         else:
             super().__init__(f'Download File: \"{input_path_and_file_name}\" to: \"{output_path_and_file_name}\"', input_path_and_file_name, output_path_and_file_name)
-        
+
         self.token = token
         self.file_size = file_size
         self.retry_delay = retry_delay
@@ -84,8 +83,10 @@ class DownloadFileTask(BaseTask):
 
             except (Exception) as e:
                 self.logger.error("Error Occured", e)
+                return False
 
         self.logger.error("Failed to download file: %s, hit max retries.", self.input_path_and_file_name)
+        return False
 
 
 

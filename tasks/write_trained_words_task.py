@@ -17,4 +17,4 @@ class WriteTrainedWordsTask(BaseTask):
         '''
         self.logger.debug('Writing Metadata')
         Tools.write_file(self.output_path_and_file_name, "\n".join(self.trained_words))
-        return True;
+        return True

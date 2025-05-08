@@ -1,6 +1,3 @@
-'''
-Asset class, representing uploaded files.
-'''
 from pathlib import Path
 
 class Asset:

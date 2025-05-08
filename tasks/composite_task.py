@@ -1,9 +1,11 @@
 from common.base_task import BaseTask
 
 class CompositeTask(BaseTask):
-
-    def __init__(self, tasks:list[BaseTask]):
-        super().__init__(f'Composite Task', "", "")
+    '''
+    Composite task to run multiple tasks in sequence.
+    '''
+    def __init__(self, tasks:list[BaseTask], name:str = "Composite Task"):
+        super().__init__(name, "", "")
         self.tasks = tasks
         
     def run(self) -> bool:

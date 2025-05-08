@@ -42,21 +42,26 @@ class TaskBuilder:
         '''
         tasks = []
 
-        for model_id, file in models.items():
+        for model_id, model in models.items():
 
-            if not os.path.exists(os.path.join(self.output_dir, file.output_path, f'{model_id}.json')):
-                tasks.append(WriteMetadataTask(model_id, os.path.join(self.output_dir, file.output_path), file.metadata))
+            metadata_path = os.path.join(self.output_dir, model.output_path, f'{model_id}.json')
 
-            if not os.path.exists(os.path.join(self.output_dir, file.output_path, 'description.html')):
-                tasks.append(WriteDescriptionTask(os.path.join(self.output_dir, file.output_path), file.description))
+            if not os.path.exists(metadata_path):
+                tasks.append(WriteMetadataTask(metadata_path, model.metadata))
 
-            for version in file.versions:
+            description_path = os.path.join(self.output_dir, model.output_path, 'description.html')
+
+            if not os.path.exists(description_path):
+                tasks.append(WriteDescriptionTask(description_path, model.description))
+
+            for version in model.versions:
 
                 if self.only_base_models is not None and version.base_model.upper() not in self.only_base_models:
                     self.logger.warning("Skipping condition: %s, not in wanted base model list", version.base_model)
                     continue
 
                 trained_words_path = os.path.join(self.output_dir, version.output_path, 'trained_words.txt')
+
                 if not os.path.exists(trained_words_path):
                     tasks.append(WriteTrainedWordsTask(trained_words_path, version.trained_words))
 
@@ -79,7 +84,7 @@ class TaskBuilder:
                         tasks.append(CompositeTask([
                             VerifyFileTask(need_verify_output_path, downloaded_output_path, file.sha_256_hash),
                             CompressFileTask(downloaded_output_path, compressed_output_path)
-                        ]))
+                        ], name=f'Verify and Compress'))
 
                     # If partial file is present or file doesn't exists, download or resume the file
                     else:
@@ -87,12 +92,11 @@ class TaskBuilder:
                             DownloadFileTask(file.url, temp_output_path, need_verify_output_path, self.token, self.retry_delay, self.max_tries, file.size_kb),
                             VerifyFileTask(need_verify_output_path, downloaded_output_path, file.sha_256_hash),
                             CompressFileTask(downloaded_output_path, compressed_output_path)
-                        ]))
+                        ], name=f'Download, Verify and Compress'))
 
                 for asset in version.assets:
                     downloaded_output_path = os.path.join(self.output_dir, asset.output_path, asset.name)
                     temp_output_path       = os.path.join(self.output_dir, asset.output_path, f'{asset.name}.tmp')
-
                     if not os.path.exists(downloaded_output_path):
                         tasks.append(DownloadFileTask(asset.url, temp_output_path, downloaded_output_path, self.token, self.retry_delay, self.max_tries))
 
