@@ -38,15 +38,15 @@ class TaskBuilder:
         '''
         tasks = []
 
-        for model_id, model in models.items():
+        for model_id, file in models.items():
 
-            if not os.path.exists(os.path.join(self.output_dir, model.output_path, f'{model_id}.json')):
-                tasks.append(WriteMetadata(model_id, os.path.join(self.output_dir, model.output_path), model.metadata))
+            if not os.path.exists(os.path.join(self.output_dir, file.output_path, f'{model_id}.json')):
+                tasks.append(WriteMetadata(model_id, os.path.join(self.output_dir, file.output_path), file.metadata))
 
-            if not os.path.exists(os.path.join(self.output_dir, model.output_path, 'description.html')):
-                tasks.append(WriteDescription(os.path.join(self.output_dir, model.output_path), model.description))
+            if not os.path.exists(os.path.join(self.output_dir, file.output_path, 'description.html')):
+                tasks.append(WriteDescription(os.path.join(self.output_dir, file.output_path), file.description))
 
-            for version in model.versions:
+            for version in file.versions:
 
                 if self.only_base_models is not None and version.base_model.upper() not in self.only_base_models:
                     self.logger.warning("Skipping condition: %s, not in wanted base model list", version.base_model)
@@ -55,24 +55,35 @@ class TaskBuilder:
                 if not os.path.exists(os.path.join(self.output_dir, version.output_path, 'trained_words.txt')):
                     tasks.append(WriteTrainedWords(os.path.join(self.output_dir, version.output_path), version.trained_words))
 
-                for model in version.files:
+                for file in version.files:
 
-                    model_path = os.path.join(self.output_dir, model.output_path, model.name)
+                    temp_output_path        = os.path.join(self.output_dir, file.output_path, f'{file.name}.tmp') 
+                    # compressed_output_path  = os.path.join(self.output_dir, file.output_path, f'{file.name}.7z') 
+                    # downloaded_output_path  = os.path.join(self.output_dir, file.output_path, file.name)
 
-                    if not self.skip_compress_models:
-                        model_path = model_path + '.7z'   
+                    # # If compressed version exists, job done!
+                    # if os.path.exists(compressed_output_path):
+                    #     continue
 
-                    if not os.path.exists(model_path):
-                        tasks.append(DownloadFile(self.token,
-                                                model.name,
-                                                os.path.join(self.output_dir, model.output_path),
-                                                model.url,
+                    # # If file excists but isn't compressed, verify and compress the file.
+                    # elif os.path.exists(downloaded_output_path):
+                    #     continue
+
+                    # # If partial file is present or file doesn't exists, download or resume the file
+                    # elif os.path.exists(temp_output_path) or not os.path.exists(downloaded_output_path):
+                    tasks.append(DownloadFile(self.token,
+                                                file.name,
+                                                os.path.join(self.output_dir, file.output_path),
+                                                file.url,
+                                                os.path.exists(temp_output_path),
                                                 self.retry_delay,
                                                 self.max_tries,
-                                                model.sha_256_hash,
-                                                model.size_kb,
+                                                file.sha_256_hash,
+                                                file.size_kb,
                                                 skip_existing_verification=self.skip_existing_verification,
                                                 compress=not self.skip_compress_models))
+
+
 
                 for asset in version.assets:
 
@@ -81,6 +92,7 @@ class TaskBuilder:
                                                 asset.name,
                                                 os.path.join(self.output_dir, asset.output_path),
                                                 asset.url,
+                                                False,
                                                 self.retry_delay,
                                                 self.max_tries,
                                                 skip_existing_verification=self.skip_existing_verification))

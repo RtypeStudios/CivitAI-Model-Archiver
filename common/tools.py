@@ -76,6 +76,10 @@ class Tools:
         printable = set(string.printable)
         value = ''.join(filter(lambda x: x in printable, value))
 
+        value = value.replace('|', '-')
+        value = value.replace('/', '-')
+        value = value.replace('\\', '-')
+
         # Reduce multiple underscores to single and trim leading/trailing underscores and dots
         value = re.sub(r'__+', '_', value).strip('_.')
 

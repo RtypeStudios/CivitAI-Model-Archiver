@@ -13,8 +13,13 @@ class DownloadFile(Task):
     '''
     Download a file from a given URL and save it to the specified output path.
     '''
-    def __init__(self, token:str, file_name:str, output_path:str, url:str, retry_delay, max_retry,  sha256_hash='', file_size=0, skip_existing_verification=False, compress=False):
-        super().__init__(f'Download File: \"{file_name}\" to: \"{output_path}\"', output_path, file_name)
+    def __init__(self, token:str, file_name:str, output_path:str, url:str, resume, retry_delay, max_retry, sha256_hash='', file_size=0, skip_existing_verification=False, compress=False):
+        
+        if resume:
+            super().__init__(f'Resume File: \"{file_name}\" to: \"{output_path}\"', output_path, file_name)
+        else:
+            super().__init__(f'Download File: \"{file_name}\" to: \"{output_path}\"', output_path, file_name)
+        
         self.token = token
         self.url = url
         self.sha256_hash = sha256_hash
