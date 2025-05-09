@@ -148,8 +148,12 @@ Some examples:
 | `HiDream`
 | `Other`
 
-
-
+--only_model_file_types
+```
++ default=,
++ "Filter model file type safetensor, ckpt"
++ example: --only_model_file_types "safetensors"  or --only_model_file_types ckpt
+```
 
 --retry_delay 
 ```
@@ -173,12 +177,6 @@ Some examples:
 ```
  + default=model_archives, 
  + "The place to output the downloads, defaults to 'model_archives'."
-```
-
---skip_existing_verification
-```
- + default=false, 
- + "Skip SHA256 verification of existing downloads."
 ```
 
 --skip_compress_models

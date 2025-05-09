@@ -28,7 +28,7 @@ if __name__ == "__main__":
     parser.add_argument("--token", type=str, default=None, help="API Token for Civitai.")
     parser.add_argument("--output_dir", type=str, default='model_archives', help="The place to output the downloads, defaults to 'model_archives'.")
     parser.add_argument("--only_base_models", nargs='+', type=str, help="Filter model version by the base model they are built on (SDXL, SD 1.5, Pony, Flux, ETC) see readme for list.")
-    parser.add_argument("--skip_existing_verification", action='store_true', default=False, help="Verifiy already downloaded files that have a hash value.")
+    parser.add_argument("--only_model_file_types", nargs='+', type=str, help="Only download specific model types with sepcifc extensions (.ckpt, .safetensors).")
     parser.add_argument("--skip_compress_models", action='store_true', default=False, help="Do not compress models after download.")
     args = parser.parse_args()
 
@@ -52,7 +52,7 @@ if __name__ == "__main__":
                           args.retry_delay,
                           args.max_threads,
                           args.only_base_models,
-                          args.skip_existing_verification,
+                          args.only_model_file_types,
                           args.skip_compress_models)
 
     # Task Summariser

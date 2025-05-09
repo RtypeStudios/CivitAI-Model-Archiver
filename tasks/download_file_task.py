@@ -53,7 +53,7 @@ class DownloadFileTask(BaseTask):
                         return False
 
                     if response.status_code == 416:
-                        self.logger.debug("Could not resume download, resume was: (%s/%s) %s -> %s", resume_header['Range'], int(response.headers.get('Content-Length', 0)), self.input_path_and_file_name, self.output_path_and_file_name)
+                        self.logger.debug("Could not resume download, resume was: (range:%s returned_length:%s) %s -> %s", resume_header['Range'], int(response.headers.get('Content-Length', 0)), self.input_path_and_file_name, self.output_path_and_file_name)
                         return False
 
                     response.raise_for_status()

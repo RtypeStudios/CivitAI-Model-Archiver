@@ -1,5 +1,6 @@
 import logging
 import os
+from pathlib import Path
 
 from common.tools import Tools
 from models.model import Model
@@ -17,7 +18,7 @@ class TaskBuilder:
     '''
     Class to process the model data and download files from CivitAI.
     '''
-    def __init__(self, output_dir:str, token:str, max_tries:int, retry_delay:int, max_threads:int, only_base_models:list[str], skip_existing_verification:bool, skip_compress_models:bool):
+    def __init__(self, output_dir:str, token:str, max_tries:int, retry_delay:int, max_threads:int, only_base_models:list[str], only_model_file_types:list[str], skip_compress_models:bool):
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging.DEBUG)
 
@@ -26,13 +27,17 @@ class TaskBuilder:
         self.max_tries = max_tries
         self.retry_delay = retry_delay
         self.max_threads = max_threads
-        self.skip_existing_verification = skip_existing_verification
         self.skip_compress_models = skip_compress_models
 
         if only_base_models is not None:
             self.only_base_models = [s.upper() for s in only_base_models]
         else:
             self.only_base_models = None
+
+        if only_model_file_types is not None:
+            self.only_model_file_types = ['.' + s.upper() for s in only_model_file_types]
+        else:
+            self.only_model_file_types = None
 
 
     def build_tasks(self, models:dict[str, Model]) -> list[BaseTask]:
@@ -56,11 +61,11 @@ class TaskBuilder:
             for version in model.versions:
 
                 if version.availability.upper() != 'PUBLIC':
-                    self.logger.warning("Skipping condition: %s, This mode is not publically availible.", version.name)
+                    self.logger.warning("Skipping condition: %s, This model is not publically available.", version.name)
                     continue
 
                 if self.only_base_models is not None and version.base_model.upper() not in self.only_base_models:
-                    self.logger.warning("Skipping condition: %s, not in wanted base model list", version.base_model)
+                    self.logger.warning("Skipping condition: %s, not in wanted base model list.", version.base_model)
                     continue
 
                 trained_words_path = os.path.join(self.output_dir, version.output_path, 'trained_words.txt')
@@ -69,6 +74,11 @@ class TaskBuilder:
                     tasks.append(WriteTrainedWordsTask(trained_words_path, version.trained_words))
 
                 for file in version.files:
+
+                    if self.only_model_file_types is not None and Path(file.name).suffix.upper() not in self.only_model_file_types:
+                        self.logger.warning("Skipping condition: %s, not in wanted model file type list.", file.name)
+                        continue
+
                     compressed_output_path  = os.path.join(self.output_dir, file.output_path, f'{file.name}.7z') 
                     downloaded_output_path  = os.path.join(self.output_dir, file.output_path, file.name)
                     need_verify_output_path = os.path.join(self.output_dir, file.output_path, f'{file.name}.verify')
