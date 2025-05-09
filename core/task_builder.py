@@ -55,6 +55,10 @@ class TaskBuilder:
 
             for version in model.versions:
 
+                if version.availability.upper() != 'PUBLIC':
+                    self.logger.warning("Skipping condition: %s, This mode is not publically availible.", version.name)
+                    continue
+
                 if self.only_base_models is not None and version.base_model.upper() not in self.only_base_models:
                     self.logger.warning("Skipping condition: %s, not in wanted base model list", version.base_model)
                     continue

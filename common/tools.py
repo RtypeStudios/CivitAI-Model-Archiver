@@ -10,7 +10,6 @@ class Tools:
     '''
     Collection of helper functions for various tasks.
     '''
-
     def __new__(cls):
         raise TypeError('Static classes cannot be instantiated')
 
@@ -37,12 +36,11 @@ class Tools:
         Make a GET request to the given URL and return the JSON response, with some retry logic built in.
         '''
         retry_count = 0
-
         while retry_count < max_retries:
             try:
-                response = requests.get(url, headers={"Content-Type": "application/json", "Authorization": f"Bearer {token}"})
-                response.raise_for_status()
-                data = response.json()
+                with requests.get(url, headers={"Content-Type": "application/json", "Authorization": f"Bearer {token}"}) as response:
+                    response.raise_for_status()
+                    data = response.json()
                 break  # Exit retry loop on successful response
             except (requests.RequestException, TimeoutError, json.JSONDecodeError) as e:
                 print(f"Error making API request or decoding JSON response: {e}")
@@ -56,11 +54,11 @@ class Tools:
 
         return data
 
-
     @staticmethod
     def sanitize_name(value, max_length=200):
-        """Sanitize a name for use as a file or folder name."""
-
+        '''
+        Sanitize a name for use as a file or folder name.
+        '''
         printable = set(string.printable)
         value = ''.join(filter(lambda x: x in printable, value))
 
