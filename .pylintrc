@@ -1,2 +1,3 @@
 [MESSAGES CONTROL]
 disable=line-too-long
+disable=missing-module-docstring

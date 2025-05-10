@@ -2,21 +2,15 @@ import os
 from lxml import etree, html
 
 from common.tools import Tools
-from tasks.task import Task
+from common.base_task import BaseTask
 
-class WriteDescription(Task):
+class WriteDescriptionTask(BaseTask):
     '''
     Write a description to an HTML file.
     '''
-
-    def __init__(self, output_path:str, description:str):
-        '''
-        Initialize the task with the output path and description.
-        '''
-        file_name = 'description.html'
-        super().__init__(f'Write Description: \"{file_name}\" to: \"{output_path}\"', output_path, file_name)
+    def __init__(self, output_path_and_file_name:str, description:str):
+        super().__init__(f'Write Description: \"{output_path_and_file_name}\"', '', output_path_and_file_name)
         self.description = description
-
 
     def run(self):
         '''
@@ -29,5 +23,5 @@ class WriteDescription(Task):
         else:
             self.description = etree.tostring(html.fromstring(self.description), encoding='utf8', pretty_print=True).decode('utf-8')
 
-        Tools.write_file(os.path.join(self.output_path, self.file_name), self.description)
+        Tools.write_file(self.output_path_and_file_name, self.description)
         return True

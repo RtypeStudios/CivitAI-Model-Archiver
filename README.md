@@ -148,8 +148,12 @@ Some examples:
 | `HiDream`
 | `Other`
 
-
-
+--only_model_file_types
+```
++ default=,
++ "Filter model file type safetensor, ckpt"
++ example: --only_model_file_types "safetensors"  or --only_model_file_types ckpt
+```
 
 --retry_delay 
 ```
@@ -159,7 +163,7 @@ Some examples:
 
 --max_tries
 ```
-+ default=3,
++ default=5,
 + "Maximum number of retries."
 ```
 
@@ -175,10 +179,10 @@ Some examples:
  + "The place to output the downloads, defaults to 'model_archives'."
 ```
 
---skip_existing_verification
+--skip_compress_models
 ```
  + default=false, 
- + "Skip SHA256 verification of existing downloads."
+ + "Skip compressing model files with 7 Zip."
 ```
 
 
@@ -191,6 +195,7 @@ You can create your API Key here
 
 
 # Alternatives:
+- [The original inspiration for this](https://github.com/Confuzu/CivitAI-Model-grabber)
 - [A powerful go based downloader, with DB functionality and filter](https://github.com/dreamfast/go-civitai-downloader)
 
 # Updates & Bugfixes
