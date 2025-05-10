@@ -45,15 +45,15 @@ class DownloadFileTask(BaseTask):
                 with requests.get(self.input_path_and_file_name, headers={ 'Authorization': f'Bearer {self.token}', **resume_header }, stream=True, timeout=2000, allow_redirects=True) as response:
 
                     if response.status_code == 401:
-                        self.logger.debug("Unauthorized for url (Model Removed?): %s", self.input_path_and_file_name)
+                        self.logger.debug("Unauthorized for url (Model Removed?): %s, Reason: %s", self.input_path_and_file_name, response.reason)
                         return False
 
                     if response.status_code == 404:
-                        self.logger.debug("File not found (Model Removed?): %s ", self.input_path_and_file_name)
+                        self.logger.debug("File not found (Model Removed?): %s, Reason: %s", self.input_path_and_file_name, response.reason)
                         return False
 
                     if response.status_code == 416:
-                        self.logger.debug("Could not resume download, resume was: (range:%s returned_length:%s) %s -> %s", resume_header['Range'], int(response.headers.get('Content-Length', 0)), self.input_path_and_file_name, self.output_path_and_file_name)
+                        self.logger.debug("Could not resume download, resume was: (range:%s returned_length:%s) %s, Reason: %s", resume_header['Range'], int(response.headers.get('Content-Length', 0)), self.input_path_and_file_name, response.reason)
                         return False
 
                     response.raise_for_status()
@@ -78,11 +78,11 @@ class DownloadFileTask(BaseTask):
                 return True
 
             except (requests.exceptions.RequestException, requests.HTTPError, requests.ConnectionError, requests.Timeout) as e:
-                self.logger.error("Error downloading file: %s", e)
+                self.logger.debug("Error downloading file: %s", e)
                 time.sleep(self.retry_delay)
 
             except (Exception) as e:
-                self.logger.error("Error Occured", e)
+                self.logger.error("Abnormal Error Occured", e)
                 return False
 
         self.logger.error("Failed to download file: %s, hit max retries.", self.input_path_and_file_name)
