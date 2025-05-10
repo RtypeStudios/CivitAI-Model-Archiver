@@ -18,6 +18,11 @@ class CompressFileTask(BaseTask):
         '''
         try:
 
+            if os.path.exists(self.input_path_and_file_name) and os.path.exists(self.output_path_and_file_name):
+                self.logger.debug("Both input file and output file exist, assuming partially complete compression, removing %s and starting again.", self.output_path_and_file_name)
+                os.remove(self.input_path_and_file_name)
+
+
             with tqdm(desc="Compressing Download", total=1, unit='B', unit_scale=True, leave=False, colour='blue') as progress_bar:
                 with py7zr.SevenZipFile(self.output_path_and_file_name, 'w', filters=[{"id": py7zr.FILTER_LZMA2, "preset": 8}]) as archive:
                     archive.write(self.input_path_and_file_name, Path(self.input_path_and_file_name).name)

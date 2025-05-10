@@ -15,5 +15,5 @@ class CompositeTask(BaseTask):
         for task in self.tasks:
             result = task.run()
             if result is False:
-                self.logger.error("Task %s failed", task.name)
+                self.logger.error("Task %s failed, exiting chain.", task.name)
                 return False

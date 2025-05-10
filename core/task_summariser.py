@@ -17,7 +17,7 @@ class TaskSummariser:
         '''
         summary = os.linesep
         summary += os.linesep
-        summary += 'Below are a list of the requested tasks (Note: anything already downloaded will be skipped).'
+        summary += 'Below are a list of the requested tasks.'
         summary += os.linesep
 
         for task in tasks:
