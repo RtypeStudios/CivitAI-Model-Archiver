@@ -12,7 +12,7 @@ class File:
         self.id             = file.get('id', '0')
         self.size_kb        = file.get('sizeKb', 0)
         self.name           = file.get('name', '')
-        self.mode_type      = file.get('type', 'Unknown')
+        self.model_type      = file.get('type', 'Unknown')
         self.url            = file.get('downloadUrl')
         self.primary        = file.get('primary')
 
