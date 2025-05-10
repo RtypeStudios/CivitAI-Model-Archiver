@@ -18,7 +18,7 @@ class TaskBuilder:
     '''
     Class to process the model data and download files from CivitAI.
     '''
-    def __init__(self, output_dir:str, token:str, max_tries:int, retry_delay:int, max_threads:int, only_base_models:list[str], only_model_file_types:list[str], skip_compress_models:bool):
+    def __init__(self, output_dir:str, token:str, max_tries:int, retry_delay:int, only_base_models:list[str], only_model_file_types:list[str], skip_compress_models:bool):
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging.DEBUG)
 
@@ -26,7 +26,6 @@ class TaskBuilder:
         self.token = token
         self.max_tries = max_tries
         self.retry_delay = retry_delay
-        self.max_threads = max_threads
         self.skip_compress_models = skip_compress_models
 
         if only_base_models is not None:

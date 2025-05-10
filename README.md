@@ -37,15 +37,13 @@ model_downloads/
 
 # Install
 
-### local deps
-```
-install Python3
-```
+### global install
+install Python3 using you distro's recomended methods
 ```
 pip install -r requirements.txt
 ```
 
-#### or virtual env:
+### or virtual env install:
 ```
 python3 -m venv vvv
 source vvv/bin/activate
@@ -71,20 +69,23 @@ python archive_model.py --usernames UserName1 UserName2 --models 1 2 3 4
 
 
 #### Required Arguments:
-```
---models 1 2 3 4 5 6
-```
-+ "A list of model ids taken from the URL of the model view page on CivitAI"
-```
---usernames username1 username2
-```
-+ "A list of usernames from CivitAI"
+These parameters are required for operation. With model and username you need one or the other or both.
+
+| Parameter         | Example                            | Default           | Notes     
+| :---------------- | :----------------                  | :---------------- | :---------------- 
+| models            | --models 1 2 3 4 5 6               | empty             | A list of model ids taken from the URL of the model view page on CivitAI
+| usernames         | --usernames username1 username2    | empty             | A list of usernames from CivitAI
+| token             | --token <YOUR API TOKEN>           | empty             | It will only Download the Public availabe Models, Provide a Token and it can also Download those Models behind the CivitAI Login 
+
+
+
+#### token
 ```
 --token 
 ```
 default=None
-+ "It will only Download the Public availabe Models"
-+ "Provide a Token and it can also Download those Models behind the CivitAI Login."
++ It will only Download the Public availabe Models
++ Provide a Token and it can also Download those Models behind the CivitAI Login
 + If you forgot to Provide a Token the Script asks for your token.
 
 

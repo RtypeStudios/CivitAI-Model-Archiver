@@ -50,7 +50,6 @@ if __name__ == "__main__":
                           args.token,
                           args.max_tries,
                           args.retry_delay,
-                          args.max_threads,
                           args.only_base_models,
                           args.only_model_file_types,
                           args.skip_compress_models)
@@ -59,7 +58,7 @@ if __name__ == "__main__":
     task_summariser = TaskSummariser()
 
     # Task Runner
-    task_runner = TaskRunner()
+    task_runner = TaskRunner(args.max_threads)
 
     # Extract models from CivitAI.
     models = extractor.extract(usernames=args.usernames, model_ids=args.models)
