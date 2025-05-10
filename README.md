@@ -195,6 +195,7 @@ You can create your API Key here
 
 
 # Alternatives:
+- [The original inspiration for this](https://github.com/Confuzu/CivitAI-Model-grabber)
 - [A powerful go based downloader, with DB functionality and filter](https://github.com/dreamfast/go-civitai-downloader)
 
 # Updates & Bugfixes
