@@ -23,7 +23,7 @@ class CompressFileTask(BaseTask):
                 os.remove(self.input_path_and_file_name)
 
             with tqdm(desc="Compressing Download", total=1, unit='B', unit_scale=True, leave=False, colour='blue') as progress_bar:
-                with py7zr.SevenZipFile(self.output_path_and_file_name, 'w', filters=[{"id": py7zr.FILTER_LZMA2, "preset": 8}]) as archive:
+                with py7zr.SevenZipFile(self.output_path_and_file_name, 'w', filters=[{"id": py7zr.FILTER_LZMA2, "preset": 7}]) as archive:
                     archive.write(self.input_path_and_file_name, Path(self.input_path_and_file_name).name)
                     progress_bar.update(1)
 
