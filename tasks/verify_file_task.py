@@ -28,7 +28,10 @@ class VerifyFileTask(BaseTask):
                     sha256.update(chunk)
 
         if sha256.hexdigest().upper() == self.expected_sha256_hash.upper():
-            os.rename(self.input_path_and_file_name, self.output_path_and_file_name)
+            # Allow us to check without renaming, by only renaming if the source and estination differ.
+            if self.input_path_and_file_name != self.output_path_and_file_name:
+                os.rename(self.input_path_and_file_name, self.output_path_and_file_name)
+
             return True
         else:
             renamed = self.output_path_and_file_name + f'.failed_verify_{time.strftime('%Y%m%d%H%M%S')}'

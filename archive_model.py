@@ -23,7 +23,7 @@ if __name__ == "__main__":
     parser.add_argument("--usernames", nargs='+', type=str, help="Enter one or more usernames you want to download from.")
     parser.add_argument("--models", nargs='+', type=str, help="Enter one or more models you want to download.")
     parser.add_argument("--retry_delay", type=int, default=10, help="Retry delay in seconds.")
-    parser.add_argument("--max_tries", type=int, default=5, help="Maximum number of retries.")
+    parser.add_argument("--max_tries", type=int, default=10, help="Maximum number of retries.")
     parser.add_argument("--max_threads", type=int, default=5, help="Maximum number of concurrent threads. Too many produces API Failure.")
     parser.add_argument("--token", type=str, default=None, help="API Token for Civitai.")
     parser.add_argument("--output_dir", type=str, default='model_archives', help="The place to output the downloads, defaults to 'model_archives'.")
