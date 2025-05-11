@@ -92,7 +92,11 @@ class TaskBuilder:
 
                     # If file exists but isn't compressed, compress the file.
                     elif os.path.exists(downloaded_output_path):
-                        tasks.append(CompressFileTask(downloaded_output_path, compressed_output_path))
+                        # Recheck the fiel before compressing, just in case.
+                        tasks.append(CompositeTask([
+                            VerifyFileTask(downloaded_output_path, downloaded_output_path, file.sha_256_hash),
+                            CompressFileTask(downloaded_output_path, compressed_output_path)
+                        ], name=f'Reverify and Compress'))
 
                     # File needs to be verified, then compressed.
                     elif os.path.exists(need_verify_output_path):

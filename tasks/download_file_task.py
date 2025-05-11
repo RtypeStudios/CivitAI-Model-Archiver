@@ -14,9 +14,9 @@ class DownloadFileTask(BaseTask):
         self.temp_output_path_and_file_name  = temp_output_path_and_file_name
 
         if os.path.exists(self.temp_output_path_and_file_name):
-            super().__init__(f'Resume File: \"{input_path_and_file_name}\" to: \"{output_path_and_file_name}\"', input_path_and_file_name, output_path_and_file_name)
+            super().__init__(f'Resume Download Of: \"{input_path_and_file_name}\" to: \"{temp_output_path_and_file_name}\"', input_path_and_file_name, output_path_and_file_name)
         else:
-            super().__init__(f'Download File: \"{input_path_and_file_name}\" to: \"{output_path_and_file_name}\"', input_path_and_file_name, output_path_and_file_name)
+            super().__init__(f'Download Download Of: \"{input_path_and_file_name}\" to: \"{temp_output_path_and_file_name}\"', input_path_and_file_name, output_path_and_file_name)
 
         self.token = token
         self.file_size = file_size

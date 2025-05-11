@@ -2,6 +2,10 @@ import logging
 import time
 import argparse
 import sys
+import os
+import py7zr
+from tqdm import tqdm
+import threading
 
 from core.metadata_extractor import MetadataExtractor
 from core.task_builder import TaskBuilder
@@ -83,3 +87,4 @@ if __name__ == "__main__":
             break
 
     task_runner.do_work(tasks)
+
