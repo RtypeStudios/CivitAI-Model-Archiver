@@ -87,7 +87,7 @@ class TaskBuilder:
                     temp_output_path        = os.path.join(self.output_dir, file.output_path, f'{file.name}.tmp')
                     
                     # If compressed version exists, job done!
-                    if os.path.exists(compressed_output_path):
+                    if os.path.exists(compressed_output_path) and not os.path.exists(downloaded_output_path):
                         continue
 
                     # If file exists but isn't compressed, compress the file.

@@ -27,19 +27,19 @@ class CompressFileTask(BaseTask):
                 os.remove(self.output_path_and_file_name)
 
 
-            # total_size = os.path.getsize(self.input_path_and_file_name)
+            total_size_mb = round(os.path.getsize(self.input_path_and_file_name) / 1024 /1024,2)
                 
             # This is becuase there appears to be no mechansim in py7zr to track archiving progress.
             # It is kludgey, but it works.
             task_done = False
 
-            with tqdm(unit='b', total=os.path.getsize(self.input_path_and_file_name), unit_scale=False, desc="Compressing (rough estimate)", colour='blue') as progress_bar:
+            with tqdm(unit='MB', total=total_size_mb, unit_scale=False, desc="Compressing (rough estimate)", colour='blue') as progress_bar:
 
                 def monitor_progress():
                     while not os.path.exists(self.output_path_and_file_name):
                         time.sleep(0.1)  # Wait for the file to be created.
                     while task_done is False:
-                        progress_bar.n = os.path.getsize(self.output_path_and_file_name)
+                        progress_bar.n = round(os.path.getsize(self.output_path_and_file_name) / 1024 / 1024)
                         progress_bar.refresh()
                         time.sleep(0.5)  # Check progress every 0.5 seconds.
                     progress_bar.close()
