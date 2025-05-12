@@ -13,6 +13,8 @@ class VerifyFileTask(BaseTask):
     '''
     def __init__(self, input_path_and_file_name:str, output_path_and_file_name:str, expected_sha256_hash:str):
         super().__init__(f'Verify File: \"{Path(input_path_and_file_name).name}\" with hash \"{expected_sha256_hash}\" then move to \"{Path(output_path_and_file_name).name}\"')
+        self.input_path_and_file_name = input_path_and_file_name
+        self.output_path_and_file_name = output_path_and_file_name
         self.expected_sha256_hash = expected_sha256_hash
 
     def run(self) -> bool:

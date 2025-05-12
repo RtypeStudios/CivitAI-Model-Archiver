@@ -10,6 +10,7 @@ class WriteDescriptionTask(BaseTask):
     '''
     def __init__(self, output_path_and_file_name:str, description:str):
         super().__init__(f'Write Description: \"{output_path_and_file_name}\"')
+        self.output_path_and_file_name = output_path_and_file_name
         self.description = description
 
     def run(self):

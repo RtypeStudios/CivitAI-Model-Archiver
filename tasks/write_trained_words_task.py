@@ -7,9 +7,9 @@ class WriteTrainedWordsTask(BaseTask):
     '''
     def __init__(self, output_path_and_file_name:str, trained_words:str):
         super().__init__(f'Write Trained Words:  \"{output_path_and_file_name}\"')
-        self.trained_words = trained_words
         self.output_path_and_file_name = output_path_and_file_name
-
+        self.trained_words = trained_words
+        
     def run(self):
         '''
         Write the trained word list to a text file.

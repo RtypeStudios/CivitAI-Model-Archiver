@@ -16,7 +16,6 @@ class CompressFileTask(BaseTask):
         self.input_path_and_file_name = input_path_and_file_name
         self.output_path_and_file_name = output_path_and_file_name
         
-        
     def run(self) -> bool:
         '''
         Verify the SHA256 hash of a file.
