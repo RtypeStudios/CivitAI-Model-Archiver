@@ -82,7 +82,7 @@ class DownloadFileTask(BaseTask):
                 time.sleep(self.retry_delay)
 
             except (Exception) as e:
-                self.logger.error("Abnormal Error Occured", e)
+                self.logger.error("Abnormal Error Occured downloading: %s", self.output_path_and_file_name, type(e), e, stack_info=True, exc_info=True)
                 return False
 
         self.logger.error("Failed to download file: %s, hit max retries.", self.input_path_and_file_name)

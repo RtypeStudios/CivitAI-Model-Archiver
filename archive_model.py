@@ -39,7 +39,6 @@ if __name__ == "__main__":
     # Validate input arguments.
     if args.token is None:
         args.token = input("Please enter your Civitai API token: ")
-        sys.exit(1)
 
     if args.usernames is None and args.models is None:
         print("Please provide at least one username or model id.")
@@ -88,3 +87,4 @@ if __name__ == "__main__":
 
     task_runner.do_work(tasks)
 
+# blake3-py

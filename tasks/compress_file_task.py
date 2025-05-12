@@ -1,5 +1,7 @@
 import os
 from pathlib import Path
+import threading
+import time
 import py7zr
 from tqdm import tqdm
 
@@ -24,20 +26,43 @@ class CompressFileTask(BaseTask):
                 self.logger.debug("Both input file and output file exist, assuming interrupted partial compression, removing %s and starting again.", self.output_path_and_file_name)
                 os.remove(self.output_path_and_file_name)
 
-            with tqdm(desc="Compressing/Testing Archive (PROGRESS INDICATOR NOT WORKING)", total=2, unit='B', unit_scale=True, leave=False, colour='blue') as progress_bar:
-                with py7zr.SevenZipFile(self.output_path_and_file_name, 'w', filters=[{"id": py7zr.FILTER_LZMA2, "preset": 7}]) as archive:
-                    
-                    # Comrpess the file.
-                    archive.write(self.input_path_and_file_name, Path(self.input_path_and_file_name).name)
-                    progress_bar.update(1)
 
-                    # Test the archive.
-                    if archive.testzip() is not None:
-                        self.logger.debug("Compressed file failed test: %s", self.output_path_and_file_name)
-                        self.cleanup()
-                        return False
-                    else:
-                        progress_bar.update(2)
+            # total_size = os.path.getsize(self.input_path_and_file_name)
+                
+            # This is becuase there appears to be no mechansim in py7zr to track archiving progress.
+            # It is kludgey, but it works.
+            task_done = False
+
+            with tqdm(unit='b', total=os.path.getsize(self.input_path_and_file_name), unit_scale=False, desc="Compressing (rough estimate)", colour='blue') as progress_bar:
+
+                def monitor_progress():
+                    while not os.path.exists(self.output_path_and_file_name):
+                        time.sleep(0.1)  # Wait for the file to be created.
+                    while task_done is False:
+                        progress_bar.n = os.path.getsize(self.output_path_and_file_name)
+                        progress_bar.refresh()
+                        time.sleep(0.5)  # Check progress every 0.5 seconds.
+                    progress_bar.close()
+                    return
+
+                monitor_thread = threading.Thread(target=monitor_progress, daemon=True)
+                monitor_thread.start()
+
+                with py7zr.SevenZipFile(self.output_path_and_file_name, 'w') as archive:
+                    archive.writeall(self.input_path_and_file_name, arcname=Path(self.input_path_and_file_name).name)
+                    task_done = True
+                    monitor_thread.join()
+
+
+            # with tqdm(unit='File', unit_scale=False, total=1, desc="Testing Archive") as progress_bar:
+            #     with py7zr.SevenZipFile(self.output_path_and_file_name, 'w') as archive:
+            #         if archive.testzip() is not None:
+            #             self.logger.debug("Compressed file failed test: %s", self.output_path_and_file_name)
+            #             self.cleanup()
+            #             return False
+            #         else:
+            #             progress_bar.update(1)
+
 
             self.logger.debug("Compressing successful, removing exiting %s", self.input_path_and_file_name)
 
@@ -49,7 +74,7 @@ class CompressFileTask(BaseTask):
             return True
 
         except (Exception) as e:
-            self.logger.debug("Compressing failed, removed partially compressed file: %s", self.output_path_and_file_name)
+            self.logger.error("Compressing failed, removed partially compressed file: %s", self.output_path_and_file_name, type(e), e, stack_info=True, exc_info=True)
             self.cleanup()
             return False
 
