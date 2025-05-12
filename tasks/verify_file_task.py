@@ -1,5 +1,6 @@
 import hashlib
 import os
+from pathlib import Path
 import time
 
 from tqdm import tqdm
@@ -11,7 +12,7 @@ class VerifyFileTask(BaseTask):
     Verify the SHA256 hash of a file.
     '''
     def __init__(self, input_path_and_file_name:str, output_path_and_file_name:str, expected_sha256_hash:str):
-        super().__init__(f'Verify File: \"{input_path_and_file_name}\" with hash \"{expected_sha256_hash}\"', input_path_and_file_name, output_path_and_file_name)
+        super().__init__(f'Verify File: \"{Path(input_path_and_file_name).name}\" with hash \"{expected_sha256_hash}\" then move to \"{Path(output_path_and_file_name).name}\"')
         self.expected_sha256_hash = expected_sha256_hash
 
     def run(self) -> bool:

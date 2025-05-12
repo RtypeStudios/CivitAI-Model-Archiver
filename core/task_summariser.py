@@ -22,9 +22,12 @@ class TaskSummariser:
 
         for task in tasks:
             if isinstance(task, CompositeTask):
+                summary += os.linesep
                 summary += f"\t{task.name}:" + os.linesep
                 for subtask in task.tasks:
                     summary += f"\t\t{subtask.name}" + os.linesep
+                summary += os.linesep
+
             else:
                 summary += f"\t{task.name}" + os.linesep
 

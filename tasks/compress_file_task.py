@@ -12,7 +12,10 @@ class CompressFileTask(BaseTask):
     Compress a file using 7zip.
     '''
     def __init__(self, input_path_and_file_name:str, output_path_and_file_name:str):
-        super().__init__(f'Compress File: \"{input_path_and_file_name}\" to: \"{output_path_and_file_name}\"', input_path_and_file_name, output_path_and_file_name)
+        super().__init__(f'Compress File: \"{Path(input_path_and_file_name).name}\" to: \"{Path(output_path_and_file_name).name}\"')
+        self.input_path_and_file_name = input_path_and_file_name
+        self.output_path_and_file_name = output_path_and_file_name
+        
         
     def run(self) -> bool:
         '''

@@ -9,7 +9,7 @@ class WriteMetadataTask(BaseTask):
     Write metadata to a JSON file.
     '''
     def __init__(self, output_path_and_file_name:str, metadata:str):
-        super().__init__(f'Write Metadata: \"{output_path_and_file_name}\"', '', output_path_and_file_name)
+        super().__init__(f'Write Metadata: \"{output_path_and_file_name}\"')
         self.metadata = metadata
 
     def run(self):
