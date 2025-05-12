@@ -54,8 +54,8 @@ class DownloadFileTask(BaseTask):
                         self.logger.debug("File not found (Model Removed?): %s, Reason: %s", self.url, response.reason)
                         return False
 
-                    if response.status_code == 416 and response.reason == 'Requested Range Not Satisfiable':
-                        self.logger.debug("Exceeded original file size for resume? removing file ans starting again. resume was: range: %s, Reason: %s", resume_header['Range'], self.url)
+                    if response.status_code == 416:
+                        self.logger.debug("Exceeded original file size for resume? removing file and starting again. resume was: range: %s, Reason: %s", resume_header['Range'], self.url)
                         if os.path.exists(self.temp_output_path_and_file_name):
                             os.remove(self.temp_output_path_and_file_name)
                         
