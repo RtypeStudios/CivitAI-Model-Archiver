@@ -13,6 +13,7 @@ class DownloadFileTask(BaseTask):
     '''
     def __init__(self, url:str, temp_output_path_and_file_name:str, output_path_and_file_name:str, token:str, retry_delay, max_retry, file_size=0):
         self.url = url
+        self.output_path_and_file_name = output_path_and_file_name
         self.temp_output_path_and_file_name  = temp_output_path_and_file_name
         self.token = token
         self.file_size = file_size
