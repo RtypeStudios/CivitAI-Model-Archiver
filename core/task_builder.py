@@ -81,6 +81,10 @@ class TaskBuilder:
                             self.logger.warning("Skipping condition: %s, not in wanted model file type list.", file.name)
                             continue
 
+                    # Flow:
+                    # Url -> X.safetensor.tmp -> X.safetensor.verify -> X.safetensor -> X.safetensor.7z
+                    # Download                | Verify               | Store         | Optional Compress
+
                     compressed_output_path  = os.path.join(self.output_dir, file.output_path, f'{file.name}.7z') 
                     downloaded_output_path  = os.path.join(self.output_dir, file.output_path, file.name)
                     need_verify_output_path = os.path.join(self.output_dir, file.output_path, f'{file.name}.verify')

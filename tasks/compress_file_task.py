@@ -33,7 +33,7 @@ class CompressFileTask(BaseTask):
             # It is kludgey, but it works.
             task_done = False
 
-            with tqdm(unit='MB', total=total_size_mb, unit_scale=False, desc="Compressing (rough estimate)", colour='blue') as progress_bar:
+            with tqdm(unit='MB', total=total_size_mb, unit_scale=False, desc="Compressing (rough estimate)", colour='blue', leave=False) as progress_bar:
 
                 def monitor_progress():
                     while not os.path.exists(self.output_path_and_file_name):
@@ -42,6 +42,7 @@ class CompressFileTask(BaseTask):
                         progress_bar.n = round(os.path.getsize(self.output_path_and_file_name) / 1024 / 1024)
                         progress_bar.refresh()
                         time.sleep(0.5)  # Check progress every 0.5 seconds.
+                    progress_bar.n = total_size_mb
                     progress_bar.close()
                     return
 
@@ -54,7 +55,7 @@ class CompressFileTask(BaseTask):
                     monitor_thread.join()
 
 
-            # with tqdm(unit='File', unit_scale=False, total=1, desc="Testing Archive") as progress_bar:
+            # with tqdm(unit='File', unit_scale=False, total=1, desc="Testing Archive", leave=False) as progress_bar:
             #     with py7zr.SevenZipFile(self.output_path_and_file_name, 'w') as archive:
             #         if archive.testzip() is not None:
             #             self.logger.debug("Compressed file failed test: %s", self.output_path_and_file_name)
@@ -66,10 +67,10 @@ class CompressFileTask(BaseTask):
 
             self.logger.debug("Compressing successful, removing exiting %s", self.input_path_and_file_name)
 
-            if os.path.exists(self.output_path_and_file_name):
+            if os.path.exists(self.input_path_and_file_name):
                 os.remove(self.input_path_and_file_name)
             else:
-                self.logger.debug("Compressed file does not exist, assuming it was removed by the user: %s", self.output_path_and_file_name)
+                self.logger.debug("Input file does not exist, assuming it was already removed by the user: %s", self.input_path_and_file_name)
 
             return True
 

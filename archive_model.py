@@ -15,7 +15,8 @@ from core.task_summariser import TaskSummariser
 if __name__ == "__main__":
 
     # Set up logging to both file and console.
-    file_logger = logging.FileHandler(f"log-{time.strftime('%Y%m%d%H%M%S')}.log", encoding='utf-8')
+    log_file = f"log-{time.strftime('%Y%m%d%H%M%S')}.log"
+    file_logger = logging.FileHandler(log_file, encoding='utf-8')
     file_logger.setLevel(logging.DEBUG)
     
     stream_logger = logging.StreamHandler()
@@ -45,7 +46,9 @@ if __name__ == "__main__":
         sys.exit(1)
 
 
-    # Build Extracotr.
+    print(f"Logging this session to {log_file}.")
+
+    # Build Extractor.
     extractor = MetadataExtractor(args.token)
 
     # Task Builder
@@ -64,9 +67,11 @@ if __name__ == "__main__":
     task_runner = TaskRunner(args.max_threads)
 
     # Extract models from CivitAI.
+    print(f"Extracting Models from CivitAI.")
     models = extractor.extract(usernames=args.usernames, model_ids=args.models)
 
     # Generate work list.
+    print(f"Building tasks based on metadata:")
     tasks = builder.build_tasks(models)
 
     if len(tasks) == 0:
