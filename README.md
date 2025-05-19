@@ -68,31 +68,44 @@ python archive_model.py --usernames UserName1 UserName2 --models 1 2 3 4
 ```
 
 
-#### Required Arguments:
+### Required Arguments:
 These parameters are required for operation. With model and username you need one or the other or both.
 
-| Parameter         | Example                            | Default           | Notes     
-| :---------------- | :----------------                  | :---------------- | :---------------- 
-| models            | --models 1 2 3 4 5 6               | empty             | A list of model ids taken from the URL of the model view page on CivitAI
-| usernames         | --usernames username1 username2    | empty             | A list of usernames from CivitAI
-| token             | --token <YOUR API TOKEN>           | empty             | It will only Download the Public availabe Models, Provide a Token and it can also Download those Models behind the CivitAI Login 
+#### models
+```
+--models <List of Model Ids> 
+```
+|                |                            |
+| :------------  | :----------------          |
+| Example        | --models 1 2 3 4 5 6       |
+| Default        | Empty                      |
+| Note           | A list of model ids taken from the URL of the model view page on CivitAI |
 
-
+#### usernames
+```
+--usernames <List of usernames> 
+```
+|                |                                       |
+| :------------  | :----------------                     |
+| Example        | --usernames username1 username2       |
+| Default        | Empty                                 |
+| Note           | A list of usernames from CivitAI      |
 
 #### token
 ```
---token 
+--token <YOUR API TOKEN> 
 ```
-default=None
-+ It will only Download the Public availabe Models
-+ Provide a Token and it can also Download those Models behind the CivitAI Login
-+ If you forgot to Provide a Token the Script asks for your token.
+|                |                            |
+| :------------  | :----------------          |
+| Example        | --token YOUR API TOKEN     |
+| Default        | Empty                      |
+| Note           | If you forgot to Provide a Token the Script asks for your token. |
+
+
 
 
 #### Optional Arguments:
-```
 You can also give the script this 5 extra Arguments
-```
 
 --only_base_models
 ```
@@ -152,7 +165,7 @@ Some examples:
 --only_model_file_types
 ```
 + default=,
-+ "Filter model file type safetensor, ckpt"
++ "Only download specific model files types with specifc extensions (.ckpt, .safetensors, .pt, .zip)"
 + example: --only_model_file_types "safetensors"  or --only_model_file_types ckpt
 ```
 

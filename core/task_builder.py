@@ -90,32 +90,52 @@ class TaskBuilder:
                     need_verify_output_path = os.path.join(self.output_dir, file.output_path, f'{file.name}.verify')
                     temp_output_path        = os.path.join(self.output_dir, file.output_path, f'{file.name}.tmp')
                     
-                    # If compressed version exists, job done!
-                    if os.path.exists(compressed_output_path) and not os.path.exists(downloaded_output_path):
-                        continue
 
-                    # If file exists but isn't compressed, compress the file.
-                    elif os.path.exists(downloaded_output_path):
-                        # Recheck the fiel before compressing, just in case.
-                        tasks.append(CompositeTask([
-                            VerifyFileTask(downloaded_output_path, downloaded_output_path, file.sha_256_hash),
-                            CompressFileTask(downloaded_output_path, compressed_output_path)
-                        ], name=f'Reverify and Compress'))
+                    if self.skip_compress_models:
 
-                    # File needs to be verified, then compressed.
-                    elif os.path.exists(need_verify_output_path):
-                        tasks.append(CompositeTask([
-                            VerifyFileTask(need_verify_output_path, downloaded_output_path, file.sha_256_hash),
-                            CompressFileTask(downloaded_output_path, compressed_output_path)
-                        ], name=f'Verify and Compress'))
+                        # If downloaded version exists, job done!
+                        if os.path.exists(downloaded_output_path):
+                            continue
 
-                    # If partial file is present or file doesn't exist, download or resume the file
+                        # File needs to be verified.
+                        elif os.path.exists(need_verify_output_path):
+                            tasks.append(VerifyFileTask(need_verify_output_path, downloaded_output_path, file.sha_256_hash))
+
+                        # If partial file is present or file doesn't exist, download or resume the file, then verify.
+                        else:
+                            tasks.append(CompositeTask([
+                                DownloadFileTask(file.url, temp_output_path, need_verify_output_path, self.token, self.retry_delay, self.max_tries, file.size_kb),
+                                VerifyFileTask(need_verify_output_path, downloaded_output_path, file.sha_256_hash),
+                            ], name=f'Download, Verify and Compress'))
+
                     else:
-                        tasks.append(CompositeTask([
-                            DownloadFileTask(file.url, temp_output_path, need_verify_output_path, self.token, self.retry_delay, self.max_tries, file.size_kb),
-                            VerifyFileTask(need_verify_output_path, downloaded_output_path, file.sha_256_hash),
-                            CompressFileTask(downloaded_output_path, compressed_output_path)
-                        ], name=f'Download, Verify and Compress'))
+
+                        # If compressed version exists, job done!
+                        if os.path.exists(compressed_output_path) and not os.path.exists(downloaded_output_path):
+                            continue
+
+                        # If file exists but isn't compressed, compress the file or if skip comrpress is set, just verify the file.
+                        elif os.path.exists(downloaded_output_path):
+                            # Recheck the fiel before compressing, just in case.
+                            tasks.append(CompositeTask([
+                                VerifyFileTask(downloaded_output_path, downloaded_output_path, file.sha_256_hash),
+                                CompressFileTask(downloaded_output_path, compressed_output_path)
+                            ], name=f'Reverify and Compress'))
+
+                        # File needs to be verified, then compressed.
+                        elif os.path.exists(need_verify_output_path):
+                            tasks.append(CompositeTask([
+                                VerifyFileTask(need_verify_output_path, downloaded_output_path, file.sha_256_hash),
+                                CompressFileTask(downloaded_output_path, compressed_output_path)
+                            ], name=f'Verify and Compress'))
+
+                        # If partial file is present or file doesn't exist, download or resume the file
+                        else:
+                            tasks.append(CompositeTask([
+                                DownloadFileTask(file.url, temp_output_path, need_verify_output_path, self.token, self.retry_delay, self.max_tries, file.size_kb),
+                                VerifyFileTask(need_verify_output_path, downloaded_output_path, file.sha_256_hash),
+                                CompressFileTask(downloaded_output_path, compressed_output_path)
+                            ], name=f'Download, Verify and Compress'))
 
                 for asset in version.assets:
                     downloaded_output_path = os.path.join(self.output_dir, asset.output_path, asset.name)
