@@ -8,13 +8,15 @@ class MetadataExtractor:
     '''
     Class to process the model data and download files from CivitAI.
     '''
-    def __init__(self, token:str=''):
+    def __init__(self, token:str='', max_tries:int=5, retry_delay:int=20):
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging.DEBUG)
 
         self.base_url = "https://civitai.com/api/v1/models"
         self.token = token
-        self.retry_delay = 20
+        self.max_tries = max_tries
+        self.retry_delay = retry_delay
+
 
     def extract(self, usernames:list=None, model_ids:list=None) -> dict[str, Model]:
         '''
@@ -36,6 +38,7 @@ class MetadataExtractor:
 
         return result
 
+
     def __extract_user(self, username:str):
         '''
         Extract all models for a given user.
@@ -49,7 +52,7 @@ class MetadataExtractor:
                 self.logger.info("End of pagination reached: 'next_page' is None.")
                 break
 
-            data = Tools.get_json_with_retry(page, self.token, self.retry_delay)
+            data = Tools.get_json_with_retry(page, self.token, self.retry_delay, self.max_tries)
 
             for model in data['items']:
                 models.append(Model(model))

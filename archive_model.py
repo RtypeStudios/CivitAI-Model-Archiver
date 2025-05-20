@@ -49,7 +49,7 @@ if __name__ == "__main__":
     print(f"Logging this session to {log_file}.")
 
     # Build Extractor.
-    extractor = MetadataExtractor(args.token)
+    extractor = MetadataExtractor(args.token, args.max_tries, args.retry_delay)
 
     # Task Builder
     builder = TaskBuilder(args.output_dir,
@@ -91,5 +91,3 @@ if __name__ == "__main__":
             break
 
     task_runner.do_work(tasks)
-
-# blake3-py
