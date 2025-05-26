@@ -64,7 +64,11 @@ class Tools:
 
         value = value.replace('|', '-')
         value = value.replace('/', '-')
-        value = value.replace('\\', '-')
+
+        value = value.replace('\\', '_')
+        value = value.replace(':', '_')
+        value = value.replace('?', '_')
+        value = value.replace('*', '_')
 
         # Reduce multiple underscores to single and trim leading/trailing underscores and dots
         value = re.sub(r'__+', '_', value).strip('_.')
