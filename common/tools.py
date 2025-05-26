@@ -62,13 +62,12 @@ class Tools:
         printable = set(string.printable)
         value = ''.join(filter(lambda x: x in printable, value))
 
+        # This are typically dividers
         value = value.replace('|', '-')
         value = value.replace('/', '-')
 
-        value = value.replace('\\', '_')
-        value = value.replace(':', '_')
-        value = value.replace('?', '_')
-        value = value.replace('*', '_')
+        # The rest of these cause issues on windows.
+        value = re.sub(r'[\\:*?"<>]', '_', value)
 
         # Reduce multiple underscores to single and trim leading/trailing underscores and dots
         value = re.sub(r'__+', '_', value).strip('_.')
