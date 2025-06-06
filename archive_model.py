@@ -2,10 +2,6 @@ import logging
 import time
 import argparse
 import sys
-import os
-import py7zr
-from tqdm import tqdm
-import threading
 
 from core.metadata_extractor import MetadataExtractor
 from core.task_builder import TaskBuilder
@@ -22,6 +18,9 @@ if __name__ == "__main__":
     stream_logger = logging.StreamHandler()
     stream_logger.setLevel(logging.INFO)
     logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s',handlers=[file_logger, stream_logger])
+
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.DEBUG)
 
     # Argument parsing.
     parser = argparse.ArgumentParser(description="Download model files and images from Civitai API.")
@@ -42,11 +41,11 @@ if __name__ == "__main__":
         args.token = input("Please enter your Civitai API token: ")
 
     if args.usernames is None and args.models is None:
-        print("Please provide at least one username or model id.")
+        logger.error("Please provide at least one username or model id.")
         sys.exit(1)
 
 
-    print(f"Logging this session to {log_file}.")
+    logger.info(f"Logging this session to {log_file}.")
 
     # Build Extractor.
     extractor = MetadataExtractor(args.token, args.max_tries, args.retry_delay)
@@ -67,15 +66,15 @@ if __name__ == "__main__":
     task_runner = TaskRunner(args.max_threads)
 
     # Extract models from CivitAI.
-    print(f"Extracting Models from CivitAI.")
+    logger.info(f"Extracting Models from CivitAI.")
     models = extractor.extract(usernames=args.usernames, model_ids=args.models)
 
     # Generate work list.
-    print(f"Building tasks based on metadata:")
+    logger.info(f"Building tasks based on metadata:")
     tasks = builder.build_tasks(models)
 
     if len(tasks) == 0:
-        print("No tasks to do, exiting.")
+        logger.warning("No tasks to do, exiting.")
         sys.exit(1)
 
     # Summerise the work list.

@@ -1,4 +1,5 @@
 import logging
+import time
 import urllib.parse
 
 from common.tools import Tools
@@ -26,15 +27,16 @@ class MetadataExtractor:
 
         if usernames is not None:
             for u in usernames:
-                user_models = self.__extract_user(u)
-                for m in user_models:
+                for m in self.__extract_user(u):
                     if m.id not in result:
-                        result[m.id] = m
+                            result[m.id] = m
         
         if model_ids is not None:
             for m in model_ids:
                 if m not in result:
-                    result[m] = self.__extract_model(m)
+                    model_data = self.__extract_model(m)
+                    if model_data is not None:
+                        result[m] = model_data
 
         return result
 
@@ -52,23 +54,40 @@ class MetadataExtractor:
                 self.logger.info("End of pagination reached: 'next_page' is None.")
                 break
 
-            data = Tools.get_json_with_retry(page, self.token, self.retry_delay, self.max_tries)
+            data = Tools.get_json_with_retry(self.logger, page, self.token, self.retry_delay, self.max_tries)
 
-            for model in data['items']:
-                models.append(Model(model))
+            if not data:
+                self.logger.warning(f"Fetching %s or %s return invalid result, skipped.", page, username)
+                return None
+            else:
+                for model in data['items']:
+                    models.append(Model(model))
 
-            metadata = data.get('metadata', {})
-            page = metadata.get('nextPage')
+                metadata = data.get('metadata', {})
+                page = metadata.get('nextPage')
 
-            if not metadata and not data['items']:
-                self.logger.warning("Termination condition met: 'metadata' is empty.")
-                break
+                if not metadata and not data['items']:
+                    self.logger.warning("Termination condition met: 'metadata' is empty.")
+                    break
+
+                time.sleep(2)  # Respect API rate limits
 
         return models
+
 
     def __extract_model(self, model_id:str):
         '''
         Exctract all models for a model.
         '''
-        data = Tools.get_json_with_retry(f"{self.base_url}/{model_id}?{urllib.parse.urlencode({ "nsfw": "true" })}", self.token, self.retry_delay)
-        return Model(data)
+        data = Tools.get_json_with_retry(self.logger, f"{self.base_url}/{model_id}?{urllib.parse.urlencode({ "nsfw": "true" })}", self.token, self.retry_delay)
+
+        time.sleep(2)  # Respect API rate limits
+
+        if not data:
+            self.logger.warning(f"Fetching model with id: %s returned invalid result, skipped.", model_id)
+            return None   
+        else:
+            return Model(data)
+        
+
+        

@@ -45,7 +45,7 @@ class TaskBuilder:
         '''
         tasks = []
 
-        self.logger.warning("Build tasks based on existing files at %s", self.output_dir)
+        self.logger.info("Build tasks based on existing files at %s", self.output_dir)
 
         for model_id, model in models.items():
 

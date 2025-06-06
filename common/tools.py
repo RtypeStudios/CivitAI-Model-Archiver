@@ -31,26 +31,37 @@ class Tools:
             f.write(content)
 
     @staticmethod
-    def get_json_with_retry(url, token, retry_delay, retry_count=0, max_retries=3):
+    def get_json_with_retry(logger, url, token, retry_delay, retry_count=0, max_retries=3):
         '''
         Make a GET request to the given URL and return the JSON response, with some retry logic built in.
         '''
+        data = None
         retry_count = 0
         while retry_count < max_retries:
             try:
                 with requests.get(url, headers={"Content-Type": "application/json", "Authorization": f"Bearer {token}"}) as response:
+                    
+                    if response.status_code == 401:
+                        logger.debug("Unauthorized for url (Model Removed?): %s, Reason: %s", url, response.reason)
+                        return None
+
+                    if response.status_code == 404:
+                        logger.debug("Not found (Model Removed?): %s, Reason: %s", url, response.reason)
+                        return None
+                    
                     response.raise_for_status()
+                    
                     data = response.json()
+
                 break  # Exit retry loop on successful response
             except (requests.RequestException, TimeoutError, json.JSONDecodeError) as e:
-                print(f"Error making API request or decoding JSON response: {e}")
+                logger.warn(f"Error making API request or decoding JSON response: %s", e)
                 retry_count += 1
                 if retry_count < max_retries:
-                    print(f"Retrying in {retry_delay} seconds...")
+                    logger.warn(f"Retrying in %s seconds...", retry_delay)
                     time.sleep(retry_delay)
                 else:
-                    print("Maximum retries exceeded. Exiting.")
-                    sys.exit(1)
+                    logger.error(f"Maximum retries exceeded fetching %s. Exiting.", url)
 
         return data
 
